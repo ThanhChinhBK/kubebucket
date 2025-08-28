@@ -491,6 +491,18 @@ class KubeTetris {
             console.log('Setting up button:', button.id);
             
             let isPressed = false;
+            let lastActionTime = 0;
+            const actionCooldown = 100; // 100ms cooldown between actions
+            
+            const executeAction = () => {
+                const now = Date.now();
+                if (now - lastActionTime < actionCooldown) {
+                    console.log('Action blocked - too soon after last action');
+                    return;
+                }
+                lastActionTime = now;
+                action();
+            };
             
             // Primary interaction - use touchstart/touchend for mobile, click for desktop
             if ('ontouchstart' in window) {
@@ -510,7 +522,7 @@ class KubeTetris {
                     e.stopPropagation();
                     if (isPressed) {
                         button.classList.remove('active');
-                        action();
+                        executeAction();
                         isPressed = false;
                     }
                 }, { passive: false });
@@ -520,6 +532,13 @@ class KubeTetris {
                     button.classList.remove('active');
                     isPressed = false;
                 }, { passive: false });
+                
+                // Prevent click events on touch devices
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, { passive: false });
+                
             } else {
                 // Desktop - use mouse events
                 button.addEventListener('mousedown', (e) => {
@@ -532,7 +551,7 @@ class KubeTetris {
                     e.preventDefault();
                     if (isPressed) {
                         button.classList.remove('active');
-                        action();
+                        executeAction();
                         isPressed = false;
                     }
                 });
@@ -541,17 +560,17 @@ class KubeTetris {
                     button.classList.remove('active');
                     isPressed = false;
                 });
+                
+                // Click as backup for desktop
+                button.addEventListener('click', (e) => {
+                    console.log('Click on', button.id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isPressed) {
+                        executeAction();
+                    }
+                });
             }
-            
-            // Always add click as fallback
-            button.addEventListener('click', (e) => {
-                console.log('Click fallback on', button.id);
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isPressed) { // Only execute if not already handled by touch/mouse
-                    action();
-                }
-            });
         };
         
         // Setup each button with appropriate actions
