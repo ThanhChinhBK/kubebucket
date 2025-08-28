@@ -1,12 +1,12 @@
-# 🎮 Kube Tetris
+# 🎮 Kube Bucket
 
-A Kubernetes-themed Tetris game that teaches pod orchestration and cluster management concepts through interactive gameplay.
+A Kubernetes-themed bucket game that teaches pod orchestration and cluster management concepts through interactive gameplay.
 
-![Kube Tetris](https://img.shields.io/badge/Game-Kube%20Tetris-blue?style=for-the-badge&logo=kubernetes)
+![Kube Bucket](https://img.shields.io/badge/Game-Kube%20Bucket-blue?style=for-the-badge&logo=kubernetes)
 
 ## 🎯 Game Overview
 
-Kube Tetris combines the classic Tetris gameplay with real Kubernetes concepts. Players must strategically place falling pods into clusters while adhering to Kubernetes constraints like resource limits, affinity rules, and taints/tolerations.
+Kube Bucket combines bucket-style gameplay with real Kubernetes concepts. Players must strategically drop falling pods into cluster buckets while adhering to Kubernetes constraints like resource limits, affinity rules, and taints/tolerations.
 
 ## 🚀 Features
 
@@ -66,39 +66,6 @@ To achieve high scores:
 4. **Optimize Clusters**: Create balanced clusters with multiple pod types
 5. **Clear Lines**: Fill complete rows for substantial point bonuses
 
-## 🚀 Deployment to GitHub Pages
-
-1. **Fork/Clone** this repository
-2. **Enable GitHub Pages** in repository settings
-3. **Select source** as main branch / root folder
-4. **Access your game** at `https://yourusername.github.io/kubetetris`
-
-## 🛠️ Local Development
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/kubetetris.git
-
-# Navigate to directory
-cd kubetetris
-
-# Serve locally (any static server works)
-python -m http.server 8000
-# or
-npx serve .
-# or simply open index.html in your browser
-```
-
-## 📁 Project Structure
-
-```
-kubetetris/
-├── index.html          # Main game page
-├── styles.css          # Game styling
-├── game.js             # Game logic and mechanics
-└── README.md           # This file
-```
-
 ## 🎯 Educational Value
 
 This game teaches several important Kubernetes concepts:
@@ -109,25 +76,6 @@ This game teaches several important Kubernetes concepts:
 - **Taints and Tolerations**: Node specialization and pod placement
 - **Cluster Architecture**: Understanding multi-node clusters
 - **Dependency Management**: Service interdependencies
-
-## 🤝 Contributing
-
-Contributions are welcome! Some ideas for enhancements:
-
-- **New Pod Types**: Add more specialized pod types
-- **Advanced Constraints**: Implement more complex K8s rules
-- **Networking**: Add service mesh concepts
-- **Monitoring**: Add observability mechanics
-- **Multi-cluster**: Expand to multiple clusters
-- **Disaster Recovery**: Add failure scenarios
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🎮 Play Now!
-
-Experience Kubernetes orchestration through gaming: [Play Kube Tetris](https://yourusername.github.io/kubetetris)
 
 ---
 
