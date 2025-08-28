@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Kube Bucket - Kubernetes Pod Management Game</title>
     <meta name="description" content="A Kubernetes-themed bucket game that teaches pod orchestration and cluster management through interactive gameplay.">
     <meta name="keywords" content="kubernetes, bucket, game, k8s, pods, clusters, orchestration, education">
@@ -75,15 +75,33 @@
                 <!-- Game Canvas -->
                 <div class="canvas-container">
                     <canvas id="gameCanvas"></canvas>
+                    
+                    <!-- Mobile Touch Controls -->
+                    <div id="mobile-controls" class="mobile-controls">
+                        <div class="mobile-control-row">
+                            <button id="move-left-btn" class="mobile-btn move-btn">←</button>
+                            <button id="start-drop-btn" class="mobile-btn action-btn">START/DROP</button>
+                            <button id="move-right-btn" class="mobile-btn move-btn">→</button>
+                        </div>
+                        <div class="mobile-control-row">
+                            <button id="instant-drop-btn" class="mobile-btn action-btn">INSTANT DROP</button>
+                            <button id="reset-btn" class="mobile-btn reset-btn">RESET</button>
+                        </div>
+                    </div>
+                    
                     <div id="game-overlay" class="game-overlay">
                         <div class="overlay-content">
                             <h2>🎮 Kube Bucket</h2>
                             <p>Drop <strong>pods</strong> (F, B, D, C, M, ML) and <strong>resources</strong> (R, CP, M, G, S)</p>
                             <p>Resources increase bucket capacity, pods consume resources</p>
                             <p><strong>Game Over:</strong> When any bucket runs out of resources!</p>
-                            <p>Press <kbd>Space</kbd> to start playing</p>
-                            <p>Use <kbd>←</kbd> <kbd>→</kbd> to move drops</p>
-                            <p>Press <kbd>R</kbd> to reset game</p>
+                            <div class="start-instructions">
+                                <p class="desktop-only">Press <kbd>Space</kbd> to start playing</p>
+                                <p class="mobile-only">Tap <strong>START/DROP</strong> to begin</p>
+                                <p class="desktop-only">Use <kbd>←</kbd> <kbd>→</kbd> to move drops</p>
+                                <p class="mobile-only">Use the touch buttons to control your drops</p>
+                                <p class="desktop-only">Press <kbd>R</kbd> to reset game</p>
+                            </div>
                         </div>
                     </div>
                 </div>

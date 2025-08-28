@@ -64,18 +64,30 @@ class KubeTetris {
         if (!container) return;
         
         const containerRect = container.getBoundingClientRect();
-        const maxWidth = Math.min(containerRect.width - 40, window.innerWidth * 0.6); // Leave some padding
-        const maxHeight = Math.min(containerRect.height - 40, window.innerHeight * 0.8);
+        const isMobile = window.innerWidth <= 768;
+        
+        let maxWidth, maxHeight;
+        
+        if (isMobile) {
+            // Mobile: Use most of the screen width, limited height
+            maxWidth = Math.min(window.innerWidth * 0.95, 400);
+            maxHeight = Math.min(window.innerHeight * 0.5, 300);
+        } else {
+            // Desktop: Use container space
+            maxWidth = Math.min(containerRect.width - 40, window.innerWidth * 0.6);
+            maxHeight = Math.min(containerRect.height - 40, window.innerHeight * 0.8);
+        }
         
         // Calculate cell size based on available space
         const cellWidth = Math.floor(maxWidth / this.BOARD_WIDTH);
         const cellHeight = Math.floor(maxHeight / this.BOARD_HEIGHT);
-        const newCellSize = Math.min(cellWidth, cellHeight, 150); // Cap at 150px max
+        const minCellSize = isMobile ? 40 : 60; // Smaller minimum for mobile
+        const maxCellSize = isMobile ? 80 : 150; // Smaller maximum for mobile
+        
+        const newCellSize = Math.min(Math.max(Math.min(cellWidth, cellHeight), minCellSize), maxCellSize);
         
         // Update cell size if it's different
-        if (newCellSize !== this.CELL_SIZE && newCellSize >= 60) { // Minimum 60px cell size
-            this.CELL_SIZE = newCellSize;
-        }
+        this.CELL_SIZE = newCellSize;
         
         // Set canvas dimensions
         const canvasWidth = this.BOARD_WIDTH * this.CELL_SIZE;
@@ -83,6 +95,10 @@ class KubeTetris {
         
         this.canvas.width = canvasWidth;
         this.canvas.height = canvasHeight;
+        
+        // Set CSS size to match for proper scaling
+        this.canvas.style.width = canvasWidth + 'px';
+        this.canvas.style.height = canvasHeight + 'px';
         
         // Redraw the game
         if (this.bucketImageLoaded && this.assetsLoaded) {
@@ -346,6 +362,7 @@ class KubeTetris {
     }
     
     setupControls() {
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             switch(e.code) {
                 case 'Space':
@@ -379,8 +396,161 @@ class KubeTetris {
             }
         });
         
+        // Mobile touch controls
+        this.setupMobileControls();
+        
         document.getElementById('play-again-btn').addEventListener('click', () => this.startNewGame());
         document.getElementById('save-score-btn').addEventListener('click', () => this.saveHighScore());
+    }
+    
+    setupMobileControls() {
+        // Mobile control buttons
+        const moveLeftBtn = document.getElementById('move-left-btn');
+        const moveRightBtn = document.getElementById('move-right-btn');
+        const startDropBtn = document.getElementById('start-drop-btn');
+        const instantDropBtn = document.getElementById('instant-drop-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        // Prevent default touch behaviors
+        const preventDefaultTouch = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        
+        // Move Left
+        if (moveLeftBtn) {
+            moveLeftBtn.addEventListener('touchstart', preventDefaultTouch);
+            moveLeftBtn.addEventListener('touchend', preventDefaultTouch);
+            moveLeftBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.gameRunning) {
+                    this.movePod(-1, 0);
+                }
+            });
+        }
+        
+        // Move Right
+        if (moveRightBtn) {
+            moveRightBtn.addEventListener('touchstart', preventDefaultTouch);
+            moveRightBtn.addEventListener('touchend', preventDefaultTouch);
+            moveRightBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.gameRunning) {
+                    this.movePod(1, 0);
+                }
+            });
+        }
+        
+        // Start/Drop
+        if (startDropBtn) {
+            startDropBtn.addEventListener('touchstart', preventDefaultTouch);
+            startDropBtn.addEventListener('touchend', preventDefaultTouch);
+            startDropBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!this.gameRunning) {
+                    this.startGame();
+                } else {
+                    // Quick drop when game is running
+                    this.dropPodInstantly();
+                }
+            });
+        }
+        
+        // Instant Drop
+        if (instantDropBtn) {
+            instantDropBtn.addEventListener('touchstart', preventDefaultTouch);
+            instantDropBtn.addEventListener('touchend', preventDefaultTouch);
+            instantDropBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.gameRunning) {
+                    this.dropPodInstantly();
+                }
+            });
+        }
+        
+        // Reset
+        if (resetBtn) {
+            resetBtn.addEventListener('touchstart', preventDefaultTouch);
+            resetBtn.addEventListener('touchend', preventDefaultTouch);
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.resetGame();
+            });
+        }
+        
+        // Touch gesture support for canvas
+        this.setupCanvasTouchControls();
+    }
+    
+    setupCanvasTouchControls() {
+        let touchStartX = null;
+        let touchStartY = null;
+        const touchThreshold = 30; // Minimum distance for a swipe
+        
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        });
+        
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling
+        });
+        
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            
+            if (touchStartX === null || touchStartY === null) {
+                return;
+            }
+            
+            const touch = e.changedTouches[0];
+            const touchEndX = touch.clientX;
+            const touchEndY = touch.clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            // Determine gesture type
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                if (Math.abs(deltaX) > touchThreshold) {
+                    if (deltaX > 0) {
+                        // Swipe right
+                        if (this.gameRunning) {
+                            this.movePod(1, 0);
+                        }
+                    } else {
+                        // Swipe left
+                        if (this.gameRunning) {
+                            this.movePod(-1, 0);
+                        }
+                    }
+                }
+            } else {
+                // Vertical swipe
+                if (Math.abs(deltaY) > touchThreshold) {
+                    if (deltaY > 0) {
+                        // Swipe down - instant drop
+                        if (this.gameRunning) {
+                            this.dropPodInstantly();
+                        }
+                    }
+                } else {
+                    // Tap (small movement)
+                    if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+                        if (!this.gameRunning) {
+                            this.startGame();
+                        }
+                    }
+                }
+            }
+            
+            // Reset touch coordinates
+            touchStartX = null;
+            touchStartY = null;
+        });
     }
     
     setupUI() {
@@ -1322,6 +1492,7 @@ class KubeTetris {
     drawNode(x, y, node) {
         const cellX = x * this.CELL_SIZE;
         const cellY = y * this.CELL_SIZE;
+        const isMobile = window.innerWidth <= 768;
         
         // Check for bucket shake animation
         let shakeX = 0, shakeY = 0;
@@ -1368,50 +1539,62 @@ class KubeTetris {
             this.drawBucketManual(cellX, cellY, node);
         }
         
-        // Resource information overlay (always drawn)
+        // Resource information overlay (always drawn) - mobile responsive font sizes
         this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 12px Roboto Mono';
+        const baseFontSize = isMobile ? Math.max(8, this.CELL_SIZE / 8) : Math.max(10, this.CELL_SIZE / 8);
+        this.ctx.font = `bold ${baseFontSize}px Roboto Mono`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'top';
         this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 1;
+        this.ctx.lineWidth = isMobile ? 2 : 1;
+        
+        const lineHeight = baseFontSize + 2;
+        let currentY = cellY + (isMobile ? 8 : 16);
         
         // CPU info with outline for better visibility
         const cpuText = `C:${node.resources.usedCpu}/${node.resources.totalCpu}`;
-        this.ctx.strokeText(cpuText, cellX + this.CELL_SIZE / 2, cellY + 16);
-        this.ctx.fillText(cpuText, cellX + this.CELL_SIZE / 2, cellY + 16);
+        this.ctx.strokeText(cpuText, cellX + this.CELL_SIZE / 2, currentY);
+        this.ctx.fillText(cpuText, cellX + this.CELL_SIZE / 2, currentY);
+        currentY += lineHeight;
         
         // Memory info with outline - now showing RAM
         const ramDisplayText = `R:${node.resources.usedRam}/${node.resources.totalRam}`;
-        this.ctx.strokeText(ramDisplayText, cellX + this.CELL_SIZE / 2, cellY + 28);
-        this.ctx.fillText(ramDisplayText, cellX + this.CELL_SIZE / 2, cellY + 28);
+        this.ctx.strokeText(ramDisplayText, cellX + this.CELL_SIZE / 2, currentY);
+        this.ctx.fillText(ramDisplayText, cellX + this.CELL_SIZE / 2, currentY);
+        currentY += lineHeight;
         
-        // SSD info
-        const ssdText = `S:${node.resources.usedSsd}/${node.resources.totalSsd}`;
-        this.ctx.strokeText(ssdText, cellX + this.CELL_SIZE / 2, cellY + 40);
-        this.ctx.fillText(ssdText, cellX + this.CELL_SIZE / 2, cellY + 40);
-        
-        // GPU info
-        const gpuText = `G:${node.resources.usedGpu}/${node.resources.totalGpu}`;
-        this.ctx.strokeText(gpuText, cellX + this.CELL_SIZE / 2, cellY + 52);
-        this.ctx.fillText(gpuText, cellX + this.CELL_SIZE / 2, cellY + 52);
+        // Only show SSD and GPU on larger screens or larger cells
+        if (!isMobile || this.CELL_SIZE > 60) {
+            // SSD info
+            const ssdText = `S:${node.resources.usedSsd}/${node.resources.totalSsd}`;
+            this.ctx.strokeText(ssdText, cellX + this.CELL_SIZE / 2, currentY);
+            this.ctx.fillText(ssdText, cellX + this.CELL_SIZE / 2, currentY);
+            currentY += lineHeight;
+            
+            // GPU info
+            const gpuText = `G:${node.resources.usedGpu}/${node.resources.totalGpu}`;
+            this.ctx.strokeText(gpuText, cellX + this.CELL_SIZE / 2, currentY);
+            this.ctx.fillText(gpuText, cellX + this.CELL_SIZE / 2, currentY);
+        }
         
         // Node ID - larger and more visible
         this.ctx.fillStyle = '#61dafb';
-        this.ctx.font = 'bold 14px Roboto Mono';
+        const nodeFontSize = isMobile ? Math.max(10, this.CELL_SIZE / 6) : Math.max(12, this.CELL_SIZE / 7);
+        this.ctx.font = `bold ${nodeFontSize}px Roboto Mono`;
         this.ctx.strokeStyle = '#000000';
-        this.ctx.strokeText(`N${node.nodeId}`, cellX + this.CELL_SIZE / 2, cellY + this.CELL_SIZE - 20);
-        this.ctx.fillText(`N${node.nodeId}`, cellX + this.CELL_SIZE / 2, cellY + this.CELL_SIZE - 20);
+        this.ctx.strokeText(`N${node.nodeId}`, cellX + this.CELL_SIZE / 2, cellY + this.CELL_SIZE - (isMobile ? 12 : 20));
+        this.ctx.fillText(`N${node.nodeId}`, cellX + this.CELL_SIZE / 2, cellY + this.CELL_SIZE - (isMobile ? 12 : 20));
         
-        // Specialization indicators
-        if (node.specialization) {
+        // Specialization indicators - only on larger screens
+        if (!isMobile && node.specialization) {
             this.ctx.fillStyle = '#ffd60a';
-            this.ctx.font = 'bold 12px Roboto Mono';
+            const specFontSize = Math.max(8, this.CELL_SIZE / 10);
+            this.ctx.font = `bold ${specFontSize}px Roboto Mono`;
             this.ctx.textAlign = 'left';
             this.ctx.strokeStyle = '#000000';
             this.ctx.lineWidth = 1;
-            this.ctx.strokeText(node.specialization, cellX + 5, cellY + 10);
-            this.ctx.fillText(node.specialization, cellX + 5, cellY + 10);
+            this.ctx.strokeText(node.specialization, cellX + 3, cellY + 8);
+            this.ctx.fillText(node.specialization, cellX + 3, cellY + 8);
         }
         
         this.ctx.restore();
@@ -1566,12 +1749,14 @@ class KubeTetris {
     }
     
     drawPodVisual(x, y, pod) {
+        const isMobile = window.innerWidth <= 768;
+        
         // Check if we have an image for this pod type
         const podImage = this.images[`pod_${pod.type}`];
         
         if (podImage && this.assetsLoaded) {
             // Draw the pod image
-            const padding = 10;
+            const padding = isMobile ? 6 : 10;
             const imageSize = this.CELL_SIZE - (padding * 2);
             this.ctx.drawImage(podImage, x + padding, y + padding, imageSize, imageSize);
             
@@ -1601,9 +1786,10 @@ class KubeTetris {
             this.ctx.lineWidth = 1;
             this.ctx.strokeRect(x + 8, y + 8, this.CELL_SIZE - 16, this.CELL_SIZE - 16);
             
-            // Pod symbol with glow
+            // Pod symbol with glow - mobile responsive size
             this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.font = 'bold 32px Roboto Mono';
+            const symbolSize = isMobile ? Math.max(16, this.CELL_SIZE / 3) : Math.max(20, this.CELL_SIZE / 3);
+            this.ctx.font = `bold ${symbolSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             this.ctx.strokeStyle = pod.color;
@@ -1616,8 +1802,8 @@ class KubeTetris {
         this.ctx.shadowBlur = 0;
         
         // Calculate responsive font sizes
-        const fontSize = Math.max(10, this.CELL_SIZE / 10);
-        const labelFontSize = Math.max(12, this.CELL_SIZE / 8);
+        const fontSize = isMobile ? Math.max(6, this.CELL_SIZE / 12) : Math.max(8, this.CELL_SIZE / 10);
+        const labelFontSize = isMobile ? Math.max(8, this.CELL_SIZE / 10) : Math.max(10, this.CELL_SIZE / 8);
         
         // Pod resource info (always show for both image and fallback)
         this.ctx.fillStyle = '#ffffff';
@@ -1625,7 +1811,7 @@ class KubeTetris {
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'top';
         this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 3; // Thicker stroke for better readability
+        this.ctx.lineWidth = isMobile ? 2 : 3; // Thicker stroke for better readability
         
         const cpuText = `C:${pod.resources.cpu}`;
         const ramText = `R:${pod.resources.ram}`;
@@ -1633,26 +1819,32 @@ class KubeTetris {
         const gpuText = `G:${pod.resources.gpu}`;
         
         // Display resources in compact format with better spacing
-        let textY = y + 6;
-        this.ctx.strokeText(cpuText, x + 6, textY);
-        this.ctx.fillText(cpuText, x + 6, textY);
+        let textY = y + (isMobile ? 4 : 6);
+        const textSpacing = isMobile ? 20 : 30;
         
-        this.ctx.strokeText(ramText, x + 6 + 30, textY);
-        this.ctx.fillText(ramText, x + 6 + 30, textY);
+        this.ctx.strokeText(cpuText, x + 4, textY);
+        this.ctx.fillText(cpuText, x + 4, textY);
         
-        if (pod.resources.gpu > 0) {
-            this.ctx.strokeText(gpuText, x + 6 + 60, textY);
-            this.ctx.fillText(gpuText, x + 6 + 60, textY);
+        this.ctx.strokeText(ramText, x + 4 + textSpacing, textY);
+        this.ctx.fillText(ramText, x + 4 + textSpacing, textY);
+        
+        // Only show GPU if it's greater than 0 and we have space
+        if (pod.resources.gpu > 0 && (!isMobile || this.CELL_SIZE > 60)) {
+            this.ctx.strokeText(gpuText, x + 4 + textSpacing * 2, textY);
+            this.ctx.fillText(gpuText, x + 4 + textSpacing * 2, textY);
         }
         
-        // Pod type label
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
-        this.ctx.textAlign = 'center';
-        this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 3; // Thicker stroke for better readability
-        this.ctx.strokeText(pod.type.toUpperCase(), x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 12);
-        this.ctx.fillText(pod.type.toUpperCase(), x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 12);
+        // Pod type label - only on larger cells or desktop
+        if (!isMobile || this.CELL_SIZE > 50) {
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
+            this.ctx.textAlign = 'center';
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.lineWidth = isMobile ? 2 : 3; // Thicker stroke for better readability
+            const labelText = isMobile ? pod.type.substring(0, 4).toUpperCase() : pod.type.toUpperCase();
+            this.ctx.strokeText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - (isMobile ? 8 : 12));
+            this.ctx.fillText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - (isMobile ? 8 : 12));
+        }
     }
     
     drawResource(x, y, resource) {
