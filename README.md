@@ -4,6 +4,12 @@ A Kubernetes-themed bucket game that teaches pod orchestration and cluster manag
 
 ![Kube Bucket](https://img.shields.io/badge/Game-Kube%20Bucket-blue?style=for-the-badge&logo=kubernetes)
 
+## 🌐 Play Online
+
+**[🎮 Play the latest version here!](https://thanhchinhbk.github.io/kubebucket/)**
+
+Try out the game directly in your browser - works on both desktop and mobile devices!
+
 ## 🎯 Game Overview
 
 Kube Bucket combines bucket-style gameplay with real Kubernetes concepts. Players must strategically drop falling pods into cluster buckets while adhering to Kubernetes constraints like resource limits, affinity rules, and taints/tolerations.
