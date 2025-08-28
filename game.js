@@ -1930,7 +1930,7 @@ class KubeTetris {
             
             // Pod symbol with glow - mobile responsive size
             this.ctx.fillStyle = '#FFFFFF';
-            const symbolSize = isMobile ? Math.max(16, this.CELL_SIZE / 3) : Math.max(20, this.CELL_SIZE / 3);
+            const symbolSize = isMobile ? Math.max(20, this.CELL_SIZE / 2.5) : Math.max(20, this.CELL_SIZE / 3);
             this.ctx.font = `bold ${symbolSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
@@ -1943,9 +1943,9 @@ class KubeTetris {
         // Reset shadow for text
         this.ctx.shadowBlur = 0;
         
-        // Calculate responsive font sizes
-        const fontSize = isMobile ? Math.max(6, this.CELL_SIZE / 12) : Math.max(8, this.CELL_SIZE / 10);
-        const labelFontSize = isMobile ? Math.max(8, this.CELL_SIZE / 10) : Math.max(10, this.CELL_SIZE / 8);
+        // Calculate responsive font sizes - much larger for mobile
+        const fontSize = isMobile ? Math.max(10, this.CELL_SIZE / 8) : Math.max(8, this.CELL_SIZE / 10);
+        const labelFontSize = isMobile ? Math.max(12, this.CELL_SIZE / 6) : Math.max(10, this.CELL_SIZE / 8);
         
         // Pod resource info (always show for both image and fallback)
         this.ctx.fillStyle = '#ffffff';
@@ -1953,43 +1953,81 @@ class KubeTetris {
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'top';
         this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = isMobile ? 2 : 3; // Thicker stroke for better readability
+        this.ctx.lineWidth = isMobile ? 3 : 3; // Thicker stroke for better readability
         
         const cpuText = `C:${pod.resources.cpu}`;
         const ramText = `R:${pod.resources.ram}`;
         const ssdText = `S:${pod.resources.ssd}`;
         const gpuText = `G:${pod.resources.gpu}`;
         
-        // Display resources in compact format with better spacing
-        let textY = y + (isMobile ? 4 : 6);
-        const textSpacing = isMobile ? 20 : 30;
-        
-        this.ctx.strokeText(cpuText, x + 4, textY);
-        this.ctx.fillText(cpuText, x + 4, textY);
-        
-        this.ctx.strokeText(ramText, x + 4 + textSpacing, textY);
-        this.ctx.fillText(ramText, x + 4 + textSpacing, textY);
-        
-        // Only show GPU if it's greater than 0 and we have space
-        if (pod.resources.gpu > 0 && (!isMobile || this.CELL_SIZE > 60)) {
-            this.ctx.strokeText(gpuText, x + 4 + textSpacing * 2, textY);
-            this.ctx.fillText(gpuText, x + 4 + textSpacing * 2, textY);
+        // Display resources in better layout for mobile
+        if (isMobile) {
+            // Mobile: Stack resources vertically for better readability
+            let textY = y + 2;
+            const lineHeight = Math.max(10, fontSize + 2);
+            
+            this.ctx.strokeText(cpuText, x + 2, textY);
+            this.ctx.fillText(cpuText, x + 2, textY);
+            
+            textY += lineHeight;
+            this.ctx.strokeText(ramText, x + 2, textY);
+            this.ctx.fillText(ramText, x + 2, textY);
+            
+            // Show GPU and SSD on third line if there's space
+            if (this.CELL_SIZE > 50 && (pod.resources.gpu > 0 || pod.resources.ssd > 0)) {
+                textY += lineHeight;
+                if (pod.resources.gpu > 0) {
+                    this.ctx.strokeText(gpuText, x + 2, textY);
+                    this.ctx.fillText(gpuText, x + 2, textY);
+                }
+                if (pod.resources.ssd > 0) {
+                    const ssdX = pod.resources.gpu > 0 ? x + 2 + fontSize * 3 : x + 2;
+                    this.ctx.strokeText(ssdText, ssdX, textY);
+                    this.ctx.fillText(ssdText, ssdX, textY);
+                }
+            }
+        } else {
+            // Desktop: Keep horizontal layout
+            let textY = y + 6;
+            const textSpacing = 30;
+            
+            this.ctx.strokeText(cpuText, x + 4, textY);
+            this.ctx.fillText(cpuText, x + 4, textY);
+            
+            this.ctx.strokeText(ramText, x + 4 + textSpacing, textY);
+            this.ctx.fillText(ramText, x + 4 + textSpacing, textY);
+            
+            // Only show GPU if it's greater than 0 and we have space
+            if (pod.resources.gpu > 0) {
+                this.ctx.strokeText(gpuText, x + 4 + textSpacing * 2, textY);
+                this.ctx.fillText(gpuText, x + 4 + textSpacing * 2, textY);
+            }
         }
         
-        // Pod type label - only on larger cells or desktop
-        if (!isMobile || this.CELL_SIZE > 50) {
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
-            this.ctx.textAlign = 'center';
-            this.ctx.strokeStyle = '#000000';
-            this.ctx.lineWidth = isMobile ? 2 : 3; // Thicker stroke for better readability
-            const labelText = isMobile ? pod.type.substring(0, 4).toUpperCase() : pod.type.toUpperCase();
-            this.ctx.strokeText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - (isMobile ? 8 : 12));
-            this.ctx.fillText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - (isMobile ? 8 : 12));
+        // Pod type label - always show but with better mobile formatting
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
+        this.ctx.textAlign = 'center';
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = isMobile ? 3 : 3; // Consistent thick stroke
+        
+        if (isMobile) {
+            // Mobile: Show shorter label at bottom with better positioning
+            const labelText = pod.type.substring(0, 3).toUpperCase();
+            const labelY = y + this.CELL_SIZE - Math.max(8, labelFontSize + 2);
+            this.ctx.strokeText(labelText, x + this.CELL_SIZE / 2, labelY);
+            this.ctx.fillText(labelText, x + this.CELL_SIZE / 2, labelY);
+        } else {
+            // Desktop: Full label
+            const labelText = pod.type.toUpperCase();
+            this.ctx.strokeText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 12);
+            this.ctx.fillText(labelText, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 12);
         }
     }
     
     drawResource(x, y, resource) {
+        const isMobile = window.innerWidth <= 768;
+        
         // Check if we have an image for this resource type
         const resourceImage = this.images[`resource_${resource.type}`];
         
@@ -2019,9 +2057,10 @@ class KubeTetris {
             this.ctx.lineWidth = 3;
             this.ctx.stroke();
             
-            // Resource symbol
+            // Resource symbol - larger on mobile
             this.ctx.fillStyle = '#000000';
-            this.ctx.font = 'bold 16px Roboto Mono';
+            const symbolSize = isMobile ? Math.max(14, this.CELL_SIZE / 4) : 16;
+            this.ctx.font = `bold ${symbolSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText(resource.symbol, x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2);
@@ -2030,8 +2069,8 @@ class KubeTetris {
         // Reset shadow for text
         this.ctx.shadowBlur = 0;
         
-        // Calculate responsive font size
-        const labelFontSize = Math.max(12, this.CELL_SIZE / 8);
+        // Calculate responsive font size - larger for mobile
+        const labelFontSize = isMobile ? Math.max(10, this.CELL_SIZE / 6) : Math.max(12, this.CELL_SIZE / 8);
         
         // Resource description with better text stroke for visibility
         this.ctx.fillStyle = '#ffffff';
@@ -2040,11 +2079,14 @@ class KubeTetris {
         this.ctx.strokeStyle = '#000000';
         this.ctx.lineWidth = 3; // Thicker stroke for better readability
         
-        this.ctx.strokeText(resource.description, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 10);
-        this.ctx.fillText(resource.description, x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 10);
+        const labelY = y + this.CELL_SIZE - (isMobile ? 8 : 10);
+        this.ctx.strokeText(resource.description, x + this.CELL_SIZE / 2, labelY);
+        this.ctx.fillText(resource.description, x + this.CELL_SIZE / 2, labelY);
     }
     
     drawClusterBoundaries() {
+        const isMobile = window.innerWidth <= 768;
+        
         // Draw node labels with bucket theme
         this.ctx.strokeStyle = '#61dafb';
         this.ctx.lineWidth = 2;
@@ -2057,11 +2099,13 @@ class KubeTetris {
             this.ctx.fillStyle = '#34495e';
             this.ctx.fillRect(x + 2, y + this.CELL_SIZE - 4, this.CELL_SIZE - 4, 4);
             
-            // Node label above with bucket emoji
+            // Node label above with bucket emoji - larger font for mobile
             this.ctx.fillStyle = '#61dafb';
-            this.ctx.font = 'bold 12px Roboto Mono';
+            const nodeFontSize = isMobile ? Math.max(10, this.CELL_SIZE / 8) : 12;
+            this.ctx.font = `bold ${nodeFontSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(`🪣 Node ${nodeId}`, x + this.CELL_SIZE / 2, y - 8);
+            const labelText = isMobile ? `🪣 ${nodeId}` : `🪣 Node ${nodeId}`;
+            this.ctx.fillText(labelText, x + this.CELL_SIZE / 2, y - 8);
         }
     }
 }
