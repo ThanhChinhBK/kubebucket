@@ -56,6 +56,8 @@ class KubeTetris {
         
         // Track user interaction for haptic feedback
         this.userHasInteracted = false;
+        this.lastMoveActionTime = 0; // Shared cooldown for all movement actions
+        
         document.addEventListener('touchstart', () => {
             this.userHasInteracted = true;
         }, { once: true });
@@ -496,11 +498,11 @@ class KubeTetris {
             
             const executeAction = () => {
                 const now = Date.now();
-                if (now - lastActionTime < actionCooldown) {
-                    console.log('Action blocked - too soon after last action');
+                // Use shared cooldown for movement actions
+                if (button.id.includes('move') && now - this.lastMoveActionTime < 100) {
+                    console.log('Button action blocked - shared cooldown active');
                     return;
                 }
-                lastActionTime = now;
                 action();
             };
             
@@ -646,17 +648,30 @@ class KubeTetris {
             const touchEndY = touch.clientY;
             const touchEndTime = Date.now();
             
+            // Check cooldown to prevent conflicts with button presses
+            if (touchEndTime - this.lastMoveActionTime < 100) {
+                console.log('Canvas swipe blocked - shared cooldown active');
+                touchStartX = null;
+                touchStartY = null;
+                touchStartTime = null;
+                return;
+            }
+            
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
             const touchDuration = touchEndTime - touchStartTime;
             
             // Haptic feedback for gestures
             const hapticFeedback = (intensity = 'light') => {
-                if (navigator.vibrate) {
-                    switch(intensity) {
-                        case 'light': navigator.vibrate(10); break;
-                        case 'medium': navigator.vibrate(25); break;
-                        case 'heavy': navigator.vibrate(50); break;
+                if (this.userHasInteracted && navigator.vibrate && 'ontouchstart' in window) {
+                    try {
+                        switch(intensity) {
+                            case 'light': navigator.vibrate(10); break;
+                            case 'medium': navigator.vibrate(25); break;
+                            case 'heavy': navigator.vibrate(50); break;
+                        }
+                    } catch (error) {
+                        console.debug('Vibration not available:', error.message);
                     }
                 }
             };
@@ -680,12 +695,14 @@ class KubeTetris {
                     if (deltaX > 0) {
                         // Swipe right
                         if (this.gameRunning) {
+                            console.log('Canvas swipe right detected');
                             this.movePod(1, 0);
                             hapticFeedback('light');
                         }
                     } else {
                         // Swipe left
                         if (this.gameRunning) {
+                            console.log('Canvas swipe left detected');
                             this.movePod(-1, 0);
                             hapticFeedback('light');
                         }
@@ -697,6 +714,7 @@ class KubeTetris {
                     if (deltaY > 0) {
                         // Swipe down - instant drop
                         if (this.gameRunning) {
+                            console.log('Canvas swipe down detected');
                             this.dropPodInstantly();
                             hapticFeedback('medium');
                         }
@@ -800,12 +818,28 @@ class KubeTetris {
     movePod(dx, dy) {
         if (!this.currentPod) return false;
         
+        // Add cooldown for horizontal movements to prevent double execution
+        const now = Date.now();
+        if (dx !== 0 && now - this.lastMoveActionTime < 100) {
+            console.log(`Movement blocked - cooldown active (${now - this.lastMoveActionTime}ms ago)`);
+            return false;
+        }
+        
+        console.log(`movePod called with dx=${dx}, dy=${dy}, current pos: x=${this.currentPod.x}, y=${this.currentPod.y}`);
+        
         const newX = this.currentPod.x + dx;
         const newY = this.currentPod.y + dy;
         
         if (this.isValidPosition(this.currentPod.shape, newX, newY)) {
             this.currentPod.x = newX;
             this.currentPod.y = newY;
+            
+            // Update cooldown timer for horizontal movements
+            if (dx !== 0) {
+                this.lastMoveActionTime = now;
+            }
+            
+            console.log(`Pod moved to new position: x=${newX}, y=${newY}`);
             return true;
         } else if (dy > 0) {
             // Check if pod is about to hit a bucket (node) and trigger animation
@@ -815,6 +849,7 @@ class KubeTetris {
             this.placePod();
             return false;
         }
+        console.log(`Movement blocked - invalid position: x=${newX}, y=${newY}`);
         return false;
     }
     
