@@ -23,6 +23,9 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
@@ -99,7 +102,13 @@
                                 <p class="desktop-only">Press <kbd>Space</kbd> to start playing</p>
                                 <p class="mobile-only">Tap <strong>START/DROP</strong> to begin</p>
                                 <p class="desktop-only">Use <kbd>←</kbd> <kbd>→</kbd> to move drops</p>
-                                <p class="mobile-only">Use the touch buttons to control your drops</p>
+                                <p class="mobile-only">Use the touch buttons or swipe gestures:</p>
+                                <div class="mobile-only mobile-instructions">
+                                    <div class="instruction-item">📱 <strong>Tap screen</strong> - Start game</div>
+                                    <div class="instruction-item">👈 <strong>Swipe left/right</strong> - Move pieces</div>
+                                    <div class="instruction-item">👇 <strong>Swipe down</strong> - Drop instantly</div>
+                                    <div class="instruction-item">🎮 <strong>Use buttons below</strong> - Full control</div>
+                                </div>
                                 <p class="desktop-only">Press <kbd>R</kbd> to reset game</p>
                             </div>
                         </div>

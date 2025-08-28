@@ -56,6 +56,12 @@ class KubeTetris {
         
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
+        
+        // Add orientation change listener for mobile devices
+        window.addEventListener('orientationchange', () => {
+            // Delay the resize to ensure the orientation change is complete
+            setTimeout(() => this.resizeCanvas(), 100);
+        });
     }
     
     resizeCanvas() {
@@ -65,13 +71,20 @@ class KubeTetris {
         
         const containerRect = container.getBoundingClientRect();
         const isMobile = window.innerWidth <= 768;
+        const isLandscape = window.innerWidth > window.innerHeight;
         
         let maxWidth, maxHeight;
         
         if (isMobile) {
-            // Mobile: Use most of the screen width, limited height
-            maxWidth = Math.min(window.innerWidth * 0.95, 400);
-            maxHeight = Math.min(window.innerHeight * 0.5, 300);
+            if (isLandscape) {
+                // Mobile landscape: Use more width, less height
+                maxWidth = Math.min(window.innerWidth * 0.7, 500);
+                maxHeight = Math.min(window.innerHeight * 0.6, 240);
+            } else {
+                // Mobile portrait: Use most of the screen width, limited height
+                maxWidth = Math.min(window.innerWidth * 0.95, 400);
+                maxHeight = Math.min(window.innerHeight * 0.45, 300);
+            }
         } else {
             // Desktop: Use container space
             maxWidth = Math.min(containerRect.width - 40, window.innerWidth * 0.6);
@@ -81,8 +94,15 @@ class KubeTetris {
         // Calculate cell size based on available space
         const cellWidth = Math.floor(maxWidth / this.BOARD_WIDTH);
         const cellHeight = Math.floor(maxHeight / this.BOARD_HEIGHT);
-        const minCellSize = isMobile ? 40 : 60; // Smaller minimum for mobile
-        const maxCellSize = isMobile ? 80 : 150; // Smaller maximum for mobile
+        
+        let minCellSize, maxCellSize;
+        if (isMobile) {
+            minCellSize = isLandscape ? 35 : 40;
+            maxCellSize = isLandscape ? 60 : 75;
+        } else {
+            minCellSize = 60;
+            maxCellSize = 150;
+        }
         
         const newCellSize = Math.min(Math.max(Math.min(cellWidth, cellHeight), minCellSize), maxCellSize);
         
@@ -99,6 +119,9 @@ class KubeTetris {
         // Set CSS size to match for proper scaling
         this.canvas.style.width = canvasWidth + 'px';
         this.canvas.style.height = canvasHeight + 'px';
+        
+        // Redraw the game
+        this.draw();
         
         // Redraw the game
         if (this.bucketImageLoaded && this.assetsLoaded) {
@@ -411,72 +434,87 @@ class KubeTetris {
         const instantDropBtn = document.getElementById('instant-drop-btn');
         const resetBtn = document.getElementById('reset-btn');
         
+        // Mobile haptic feedback helper
+        const hapticFeedback = (intensity = 'medium') => {
+            if (navigator.vibrate) {
+                switch(intensity) {
+                    case 'light':
+                        navigator.vibrate(10);
+                        break;
+                    case 'medium':
+                        navigator.vibrate(25);
+                        break;
+                    case 'heavy':
+                        navigator.vibrate(50);
+                        break;
+                }
+            }
+        };
+        
         // Prevent default touch behaviors
         const preventDefaultTouch = (e) => {
             e.preventDefault();
             e.stopPropagation();
         };
         
-        // Move Left
-        if (moveLeftBtn) {
-            moveLeftBtn.addEventListener('touchstart', preventDefaultTouch);
-            moveLeftBtn.addEventListener('touchend', preventDefaultTouch);
-            moveLeftBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.gameRunning) {
-                    this.movePod(-1, 0);
-                }
+        // Enhanced button interaction with feedback
+        const setupButton = (button, action, feedbackIntensity = 'medium') => {
+            if (!button) return;
+            
+            button.addEventListener('touchstart', (e) => {
+                preventDefaultTouch(e);
+                button.classList.add('active');
+                hapticFeedback(feedbackIntensity);
             });
-        }
+            
+            button.addEventListener('touchend', (e) => {
+                preventDefaultTouch(e);
+                button.classList.remove('active');
+            });
+            
+            button.addEventListener('touchcancel', (e) => {
+                preventDefaultTouch(e);
+                button.classList.remove('active');
+            });
+            
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                action();
+            });
+        };
         
-        // Move Right
-        if (moveRightBtn) {
-            moveRightBtn.addEventListener('touchstart', preventDefaultTouch);
-            moveRightBtn.addEventListener('touchend', preventDefaultTouch);
-            moveRightBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.gameRunning) {
-                    this.movePod(1, 0);
-                }
-            });
-        }
+        // Setup each button with appropriate actions
+        setupButton(moveLeftBtn, () => {
+            if (this.gameRunning) {
+                this.movePod(-1, 0);
+            }
+        }, 'light');
         
-        // Start/Drop
-        if (startDropBtn) {
-            startDropBtn.addEventListener('touchstart', preventDefaultTouch);
-            startDropBtn.addEventListener('touchend', preventDefaultTouch);
-            startDropBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!this.gameRunning) {
-                    this.startGame();
-                } else {
-                    // Quick drop when game is running
-                    this.dropPodInstantly();
-                }
-            });
-        }
+        setupButton(moveRightBtn, () => {
+            if (this.gameRunning) {
+                this.movePod(1, 0);
+            }
+        }, 'light');
         
-        // Instant Drop
-        if (instantDropBtn) {
-            instantDropBtn.addEventListener('touchstart', preventDefaultTouch);
-            instantDropBtn.addEventListener('touchend', preventDefaultTouch);
-            instantDropBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.gameRunning) {
-                    this.dropPodInstantly();
-                }
-            });
-        }
+        setupButton(startDropBtn, () => {
+            if (!this.gameRunning) {
+                this.startGame();
+                hapticFeedback('heavy'); // Extra feedback for game start
+            } else {
+                this.dropPodInstantly();
+            }
+        }, 'medium');
         
-        // Reset
-        if (resetBtn) {
-            resetBtn.addEventListener('touchstart', preventDefaultTouch);
-            resetBtn.addEventListener('touchend', preventDefaultTouch);
-            resetBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.resetGame();
-            });
-        }
+        setupButton(instantDropBtn, () => {
+            if (this.gameRunning) {
+                this.dropPodInstantly();
+            }
+        }, 'medium');
+        
+        setupButton(resetBtn, () => {
+            this.resetGame();
+            hapticFeedback('heavy'); // Strong feedback for reset
+        }, 'heavy');
         
         // Touch gesture support for canvas
         this.setupCanvasTouchControls();
@@ -485,34 +523,62 @@ class KubeTetris {
     setupCanvasTouchControls() {
         let touchStartX = null;
         let touchStartY = null;
+        let touchStartTime = null;
         const touchThreshold = 30; // Minimum distance for a swipe
+        const tapTimeThreshold = 200; // Maximum time for a tap (milliseconds)
         
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
-        });
+            touchStartTime = Date.now();
+        }, { passive: false });
         
         this.canvas.addEventListener('touchmove', (e) => {
             e.preventDefault(); // Prevent scrolling
-        });
+        }, { passive: false });
         
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
             
-            if (touchStartX === null || touchStartY === null) {
+            if (touchStartX === null || touchStartY === null || touchStartTime === null) {
                 return;
             }
             
             const touch = e.changedTouches[0];
             const touchEndX = touch.clientX;
             const touchEndY = touch.clientY;
+            const touchEndTime = Date.now();
             
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
+            const touchDuration = touchEndTime - touchStartTime;
             
-            // Determine gesture type
+            // Haptic feedback for gestures
+            const hapticFeedback = (intensity = 'light') => {
+                if (navigator.vibrate) {
+                    switch(intensity) {
+                        case 'light': navigator.vibrate(10); break;
+                        case 'medium': navigator.vibrate(25); break;
+                        case 'heavy': navigator.vibrate(50); break;
+                    }
+                }
+            };
+            
+            // Check if it's a tap (quick touch with minimal movement)
+            if (touchDuration < tapTimeThreshold && Math.abs(deltaX) < 15 && Math.abs(deltaY) < 15) {
+                if (!this.gameRunning) {
+                    this.startGame();
+                    hapticFeedback('heavy');
+                } else {
+                    // Tap during game - could be a quick action
+                    hapticFeedback('light');
+                }
+                return;
+            }
+            
+            // Determine gesture type based on larger movement
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 // Horizontal swipe
                 if (Math.abs(deltaX) > touchThreshold) {
@@ -520,11 +586,13 @@ class KubeTetris {
                         // Swipe right
                         if (this.gameRunning) {
                             this.movePod(1, 0);
+                            hapticFeedback('light');
                         }
                     } else {
                         // Swipe left
                         if (this.gameRunning) {
                             this.movePod(-1, 0);
+                            hapticFeedback('light');
                         }
                     }
                 }
@@ -535,14 +603,11 @@ class KubeTetris {
                         // Swipe down - instant drop
                         if (this.gameRunning) {
                             this.dropPodInstantly();
+                            hapticFeedback('medium');
                         }
-                    }
-                } else {
-                    // Tap (small movement)
-                    if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
-                        if (!this.gameRunning) {
-                            this.startGame();
-                        }
+                    } else {
+                        // Swipe up - could be used for future features
+                        hapticFeedback('light');
                     }
                 }
             }
@@ -550,7 +615,8 @@ class KubeTetris {
             // Reset touch coordinates
             touchStartX = null;
             touchStartY = null;
-        });
+            touchStartTime = null;
+        }, { passive: false });
     }
     
     setupUI() {
@@ -1922,6 +1988,19 @@ class KubeTetris {
             this.ctx.fillText(`🪣 Node ${nodeId}`, x + this.CELL_SIZE / 2, y - 8);
         }
     }
+}
+
+// Register service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+                console.log('SW registration failed: ', registrationError);
+            });
+    });
 }
 
 // Initialize game when page loads

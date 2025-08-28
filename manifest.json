@@ -1,0 +1,39 @@
+{
+  "name": "Kube Bucket - Kubernetes Pod Management Game",
+  "short_name": "Kube Bucket",
+  "description": "A Kubernetes-themed bucket game that teaches pod orchestration and cluster management through interactive gameplay",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000814",
+  "theme_color": "#61dafb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000814'/><text x='96' y='120' text-anchor='middle' font-size='120' fill='%2361dafb'>🎮</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23000814'/><text x='256' y='320' text-anchor='middle' font-size='320' fill='%2361dafb'>🎮</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'><rect width='1280' height='720' fill='%23000814'/><text x='640' y='360' text-anchor='middle' font-size='80' fill='%2361dafb'>Kube Bucket Game</text></svg>",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 750 1334'><rect width='750' height='1334' fill='%23000814'/><text x='375' y='667' text-anchor='middle' font-size='60' fill='%2361dafb'>Mobile Game</text></svg>",
+      "sizes": "750x1334",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}

@@ -202,6 +202,9 @@ body::before {
     border-radius: 15px;
     border: 2px solid rgba(0, 255, 255, 0.3);
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
 }
 
 .mobile-control-row {
@@ -232,10 +235,41 @@ body::before {
     user-select: none;
     /* Prevent double-tap zoom */
     touch-action: manipulation;
+    /* Better mobile responsiveness */
+    min-height: 48px;
+    /* Improved haptic feedback */
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: width 0.3s ease, height 0.3s ease;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+.mobile-btn:active::before {
+    width: 200px;
+    height: 200px;
+}
+
+.mobile-btn.active {
+    transform: translateY(2px) scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #003366 0%, #001d3d 100%);
+    border-color: #4fc3f7;
 }
 
 .mobile-btn:active {
-    transform: translateY(2px);
+    transform: translateY(2px) scale(0.95);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     background: linear-gradient(135deg, #003366 0%, #001d3d 100%);
     border-color: #4fc3f7;
@@ -311,6 +345,26 @@ body::before {
 .overlay-content p {
     margin-bottom: 10px;
     font-size: 1.1em;
+}
+
+.mobile-instructions {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(97, 218, 251, 0.3);
+}
+
+.instruction-item {
+    margin: 8px 0;
+    font-size: 0.95em;
+    text-align: left;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.instruction-item:last-child {
+    border-bottom: none;
 }
 
 /* Next Pod Display */
@@ -849,6 +903,42 @@ kbd {
     .overlay-content p {
         font-size: 0.9em;
         margin-bottom: 8px;
+    }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    .game-container {
+        padding: 3px;
+    }
+    
+    .game-header {
+        margin-bottom: 3px;
+    }
+    
+    .game-header h1 {
+        font-size: 1.2em;
+        margin-bottom: 1px;
+    }
+    
+    .game-header p {
+        font-size: 0.6em;
+    }
+    
+    #gameCanvas {
+        max-height: 60vh;
+        max-width: 500px;
+    }
+    
+    .mobile-controls {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .mobile-btn {
+        padding: 10px 8px;
+        font-size: 0.8em;
+        min-height: 40px;
     }
 }
 
