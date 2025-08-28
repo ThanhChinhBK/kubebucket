@@ -54,6 +54,15 @@ class KubeTetris {
         this.loadHighScores();
         this.resizeCanvas();
         
+        // Track user interaction for haptic feedback
+        this.userHasInteracted = false;
+        document.addEventListener('touchstart', () => {
+            this.userHasInteracted = true;
+        }, { once: true });
+        document.addEventListener('click', () => {
+            this.userHasInteracted = true;
+        }, { once: true });
+        
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
         
@@ -434,19 +443,34 @@ class KubeTetris {
         const instantDropBtn = document.getElementById('instant-drop-btn');
         const resetBtn = document.getElementById('reset-btn');
         
+        // Debug: Check if elements exist
+        console.log('Mobile buttons found:', {
+            moveLeftBtn: !!moveLeftBtn,
+            moveRightBtn: !!moveRightBtn,
+            startDropBtn: !!startDropBtn,
+            instantDropBtn: !!instantDropBtn,
+            resetBtn: !!resetBtn
+        });
+        
         // Mobile haptic feedback helper
         const hapticFeedback = (intensity = 'medium') => {
-            if (navigator.vibrate) {
-                switch(intensity) {
-                    case 'light':
-                        navigator.vibrate(10);
-                        break;
-                    case 'medium':
-                        navigator.vibrate(25);
-                        break;
-                    case 'heavy':
-                        navigator.vibrate(50);
-                        break;
+            // Only attempt vibration on mobile devices, after user interaction, and if vibration is supported
+            if (this.userHasInteracted && navigator.vibrate && 'ontouchstart' in window) {
+                try {
+                    switch(intensity) {
+                        case 'light':
+                            navigator.vibrate(10);
+                            break;
+                        case 'medium':
+                            navigator.vibrate(25);
+                            break;
+                        case 'heavy':
+                            navigator.vibrate(50);
+                            break;
+                    }
+                } catch (error) {
+                    // Silently ignore vibration errors
+                    console.debug('Vibration not available:', error.message);
                 }
             }
         };
@@ -459,44 +483,94 @@ class KubeTetris {
         
         // Enhanced button interaction with feedback
         const setupButton = (button, action, feedbackIntensity = 'medium') => {
-            if (!button) return;
+            if (!button) {
+                console.warn('Button not found for setup');
+                return;
+            }
             
-            button.addEventListener('touchstart', (e) => {
-                preventDefaultTouch(e);
-                button.classList.add('active');
-                hapticFeedback(feedbackIntensity);
-            });
+            console.log('Setting up button:', button.id);
             
-            button.addEventListener('touchend', (e) => {
-                preventDefaultTouch(e);
-                button.classList.remove('active');
-            });
+            let isPressed = false;
             
-            button.addEventListener('touchcancel', (e) => {
-                preventDefaultTouch(e);
-                button.classList.remove('active');
-            });
+            // Primary interaction - use touchstart/touchend for mobile, click for desktop
+            if ('ontouchstart' in window) {
+                // Mobile/touch device
+                button.addEventListener('touchstart', (e) => {
+                    console.log('Touch start on', button.id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isPressed = true;
+                    button.classList.add('active');
+                    hapticFeedback(feedbackIntensity);
+                }, { passive: false });
+                
+                button.addEventListener('touchend', (e) => {
+                    console.log('Touch end on', button.id);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isPressed) {
+                        button.classList.remove('active');
+                        action();
+                        isPressed = false;
+                    }
+                }, { passive: false });
+                
+                button.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    button.classList.remove('active');
+                    isPressed = false;
+                }, { passive: false });
+            } else {
+                // Desktop - use mouse events
+                button.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isPressed = true;
+                    button.classList.add('active');
+                });
+                
+                button.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    if (isPressed) {
+                        button.classList.remove('active');
+                        action();
+                        isPressed = false;
+                    }
+                });
+                
+                button.addEventListener('mouseleave', (e) => {
+                    button.classList.remove('active');
+                    isPressed = false;
+                });
+            }
             
+            // Always add click as fallback
             button.addEventListener('click', (e) => {
+                console.log('Click fallback on', button.id);
                 e.preventDefault();
-                action();
+                e.stopPropagation();
+                if (!isPressed) { // Only execute if not already handled by touch/mouse
+                    action();
+                }
             });
         };
         
         // Setup each button with appropriate actions
         setupButton(moveLeftBtn, () => {
+            console.log('Move left action triggered');
             if (this.gameRunning) {
                 this.movePod(-1, 0);
             }
         }, 'light');
         
         setupButton(moveRightBtn, () => {
+            console.log('Move right action triggered');
             if (this.gameRunning) {
                 this.movePod(1, 0);
             }
         }, 'light');
         
         setupButton(startDropBtn, () => {
+            console.log('Start/drop action triggered, gameRunning:', this.gameRunning);
             if (!this.gameRunning) {
                 this.startGame();
                 hapticFeedback('heavy'); // Extra feedback for game start
@@ -506,12 +580,14 @@ class KubeTetris {
         }, 'medium');
         
         setupButton(instantDropBtn, () => {
+            console.log('Instant drop action triggered');
             if (this.gameRunning) {
                 this.dropPodInstantly();
             }
         }, 'medium');
         
         setupButton(resetBtn, () => {
+            console.log('Reset action triggered');
             this.resetGame();
             hapticFeedback('heavy'); // Strong feedback for reset
         }, 'heavy');
@@ -2005,6 +2081,15 @@ if ('serviceWorker' in navigator) {
 
 // Initialize game when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing game...');
     const game = new KubeTetris();
     game.draw();
+    
+    // Ensure mobile controls are set up after a brief delay
+    setTimeout(() => {
+        console.log('Re-setting up mobile controls...');
+        if (game.setupMobileControls) {
+            game.setupMobileControls();
+        }
+    }, 100);
 });
