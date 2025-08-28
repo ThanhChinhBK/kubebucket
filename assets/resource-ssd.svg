@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+  <defs>
+    <linearGradient id="ssdGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#34495e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="ssdGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Resource crystal shape -->
+  <polygon points="30,8 45,22 45,38 30,52 15,38 15,22" 
+           fill="url(#ssdGradient)" stroke="#1a252f" stroke-width="2"/>
+  
+  <!-- Inner glow -->
+  <polygon points="30,12 41,24 41,36 30,48 19,36 19,24" 
+           fill="url(#ssdGlow)"/>
+  
+  <!-- SSD body -->
+  <rect x="16" y="22" width="28" height="16" fill="#7f8c8d" stroke="#95a5a6" stroke-width="1" rx="2"/>
+  
+  <!-- SSD label -->
+  <rect x="18" y="24" width="24" height="4" fill="#ecf0f1" rx="1"/>
+  <text x="30" y="26.5" font-family="Arial, sans-serif" font-size="6" fill="#2c3e50" text-anchor="middle" font-weight="bold">SSD</text>
+  
+  <!-- Connector ports -->
+  <rect x="16" y="30" width="2" height="6" fill="#f39c12" rx="1"/>
+  <rect x="42" y="30" width="2" height="6" fill="#f39c12" rx="1"/>
+  
+  <!-- Speed indicators -->
+  <rect x="20" y="30" width="4" height="1" fill="#2ecc71"/>
+  <rect x="26" y="30" width="4" height="1" fill="#2ecc71"/>
+  <rect x="32" y="30" width="4" height="1" fill="#2ecc71"/>
+  <rect x="38" y="30" width="4" height="1" fill="#2ecc71"/>
+  
+  <rect x="20" y="32" width="4" height="1" fill="#f39c12"/>
+  <rect x="26" y="32" width="4" height="1" fill="#f39c12"/>
+  <rect x="32" y="32" width="4" height="1" fill="#f39c12"/>
+  <rect x="38" y="32" width="4" height="1" fill="#f39c12"/>
+  
+  <rect x="20" y="34" width="4" height="1" fill="#e74c3c"/>
+  <rect x="26" y="34" width="4" height="1" fill="#e74c3c"/>
+  <rect x="32" y="34" width="4" height="1" fill="#e74c3c"/>
+  <rect x="38" y="34" width="4" height="1" fill="#e74c3c"/>
+  
+  <!-- Activity LED -->
+  <circle cx="40" cy="26" r="1.5" fill="#2ecc71"/>
+  
+  <!-- Power icon -->
+  <circle cx="45" cy="15" r="8" fill="#34495e" opacity="0.8"/>
+  <text x="45" y="18" font-family="Arial, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">+</text>
+  
+  <!-- Label -->
+  <text x="30" y="56" font-family="Arial, sans-serif" font-size="9" fill="#1a252f" text-anchor="middle" font-weight="bold">SSD</text>
+</svg>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kube Tetris - Kubernetes Pod Management Game</title>
+    <meta name="description" content="A Kubernetes-themed Tetris game that teaches pod orchestration and cluster management through interactive gameplay.">
+    <meta name="keywords" content="kubernetes, tetris, game, k8s, pods, clusters, orchestration, education">
+    <meta name="author" content="Kube Tetris">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourusername.github.io/kubetetris/">
+    <meta property="og:title" content="Kube Tetris - Learn Kubernetes Through Gaming">
+    <meta property="og:description" content="Master Kubernetes pod orchestration through this educational Tetris-style game featuring real K8s constraints and cluster management.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://yourusername.github.io/kubetetris/">
+    <meta property="twitter:title" content="Kube Tetris - Learn Kubernetes Through Gaming">
+    <meta property="twitter:description" content="Master Kubernetes pod orchestration through this educational Tetris-style game featuring real K8s constraints and cluster management.">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🎮 Kube Tetris</h1>
+            <p>Orchestrate pods into clusters like a true Kubernetes admin!</p>
+        </header>
+
+        <div class="game-interface">
+            <div class="game-board-container">
+                <!-- Left Sidebar with High Scores -->
+                <div class="sidebar-left">
+                    <div class="high-scores">
+                        <h3>� High Scores</h3>
+                        <div id="high-scores-list"></div>
+                    </div>
+                    
+                    <div class="score-display">
+                        <h3>📊 Current Score</h3>
+                        <div id="current-score">0</div>
+                    </div>
+                    
+                    <div class="controls">
+                        <h3>🎮 Controls</h3>
+                        <div class="control-item">
+                            <span>Start/Drop</span>
+                            <kbd>Space</kbd>
+                        </div>
+                        <div class="control-item">
+                            <span>Move Left</span>
+                            <kbd>←</kbd>
+                        </div>
+                        <div class="control-item">
+                            <span>Move Right</span>
+                            <kbd>→</kbd>
+                        </div>
+                        <div class="control-item">
+                            <span>Drop Instantly</span>
+                            <kbd>↓</kbd>
+                        </div>
+                        <div class="control-item">
+                            <span>Reset Game</span>
+                            <kbd>R</kbd>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Canvas -->
+                <div class="canvas-container">
+                    <canvas id="gameCanvas"></canvas>
+                    <div id="game-overlay" class="game-overlay">
+                        <div class="overlay-content">
+                            <h2>🎮 Kube Tetris</h2>
+                            <p>Drop <strong>pods</strong> (F, B, D, C, M, ML) and <strong>resources</strong> (R, CP, M, G, S)</p>
+                            <p>Resources increase bucket capacity, pods consume resources</p>
+                            <p><strong>Game Over:</strong> When any bucket runs out of resources!</p>
+                            <p>Press <kbd>Space</kbd> to start playing</p>
+                            <p>Use <kbd>←</kbd> <kbd>→</kbd> to move drops</p>
+                            <p>Press <kbd>R</kbd> to reset game</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar with Next Drop and Node Status -->
+                <div class="sidebar-right">
+                    <div class="next-pod-display">
+                        <h3>📦 Next Drop</h3>
+                        <div id="next-pod" class="pod-preview">
+                            ?
+                        </div>
+                    </div>
+                    
+                    <div class="drop-types">
+                        <h3>🎯 Drop Types</h3>
+                        <div class="drop-type-section">
+                            <h4>Pods (Services)</h4>
+                            <div class="drop-type">F - Frontend</div>
+                            <div class="drop-type">B - Backend</div>
+                            <div class="drop-type">D - Database</div>
+                            <div class="drop-type">C - Cache</div>
+                            <div class="drop-type">M - Monitor</div>
+                            <div class="drop-type">ML - ML Task</div>
+                        </div>
+                        <div class="drop-type-section">
+                            <h4>Resources (Upgrades)</h4>
+                            <div class="drop-type">R - RAM (+32)</div>
+                            <div class="drop-type">CP - CPU (+16)</div>
+                            <div class="drop-type">G - GPU (+8 CPU, +16 Mem)</div>
+                            <div class="drop-type">S - SSD (+200)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <footer class="game-footer">
+            <p>Learn Kubernetes concepts through gameplay! 🚢</p>
+        </footer>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="final-score">0</span></p>
+            <div id="new-high-score" class="hidden">
+                <p>🎉 New High Score! 🎉</p>
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                <button id="save-score-btn" class="btn primary">Save Score</button>
+            </div>
+            <button id="play-again-btn" class="btn primary">Play Again</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

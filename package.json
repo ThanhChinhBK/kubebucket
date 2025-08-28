@@ -1,0 +1,36 @@
+{
+  "name": "kubetetris",
+  "version": "1.0.0",
+  "description": "A Kubernetes-themed Tetris game that teaches pod orchestration and cluster management",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve . --live",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "gh-pages -d ."
+  },
+  "keywords": [
+    "kubernetes",
+    "tetris",
+    "game",
+    "education",
+    "k8s",
+    "pods",
+    "clusters",
+    "orchestration"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/kubetetris.git"
+  },
+  "homepage": "https://yourusername.github.io/kubetetris",
+  "devDependencies": {
+    "serve": "^14.2.0",
+    "gh-pages": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

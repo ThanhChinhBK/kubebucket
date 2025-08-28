@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <!-- Bucket body (trapezoid) -->
+  <defs>
+    <linearGradient id="bucketGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rimGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ecf0f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bdc3c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Bucket rim -->
+  <rect x="8" y="12" width="64" height="8" fill="url(#rimGradient)" stroke="#34495e" stroke-width="2" rx="2"/>
+  
+  <!-- Bucket body -->
+  <path d="M 12 20 L 68 20 L 64 72 L 16 72 Z" fill="url(#bucketGradient)" stroke="#34495e" stroke-width="2"/>
+  
+  <!-- Left handle -->
+  <rect x="4" y="16" width="6" height="12" fill="#7f8c8d" stroke="#34495e" stroke-width="1" rx="3"/>
+  
+  <!-- Right handle -->
+  <rect x="70" y="16" width="6" height="12" fill="#7f8c8d" stroke="#34495e" stroke-width="1" rx="3"/>
+  
+  <!-- Resource fill area (template for dynamic content) -->
+  <path id="fillArea" d="M 16 68 L 64 68 L 66 24 L 14 24 Z" fill="none" opacity="0.7"/>
+  
+  <!-- Highlight on rim -->
+  <rect x="12" y="14" width="56" height="2" fill="rgba(255,255,255,0.3)"/>
+  
+  <!-- Shadow/depth effect -->
+  <path d="M 68 20 L 64 72 L 66 72 L 70 20" fill="rgba(0,0,0,0.1)"/>
+</svg>
