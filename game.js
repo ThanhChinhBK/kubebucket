@@ -1,12 +1,16 @@
 // Kube Tetris Game Logic
 class KubeTetris {
     constructor() {
+        // Cache busting and version management
+        this.gameVersion = '0.0.1'; // Update this when making significant changes
+        this.checkAndClearCache();
+        
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
         // Load bucket image
         this.bucketImage = new Image();
-        this.bucketImage.src = 'assets/bucket.svg';
+        this.bucketImage.src = `assets/bucket.svg?v=${this.gameVersion}&t=${Date.now()}`;
         this.bucketImageLoaded = false;
         this.bucketImage.onload = () => {
             this.bucketImageLoaded = true;
@@ -75,6 +79,74 @@ class KubeTetris {
         });
     }
     
+    // Cache management and version checking
+    checkAndClearCache() {
+        const storedVersion = localStorage.getItem('kubetetris_version');
+        
+        // If version has changed or doesn't exist, clear relevant caches
+        if (storedVersion !== this.gameVersion) {
+            console.log(`KubeTetris version updated: ${storedVersion} → ${this.gameVersion}`);
+            
+            // Clear localStorage except for high scores
+            const highScores = localStorage.getItem('kubetetris_highscores');
+            localStorage.clear();
+            if (highScores) {
+                localStorage.setItem('kubetetris_highscores', highScores);
+            }
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Try to clear browser cache programmatically
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    cacheNames.forEach(cacheName => {
+                        if (cacheName.includes('kubetetris') || cacheName.includes('game')) {
+                            caches.delete(cacheName);
+                        }
+                    });
+                });
+            }
+            
+            // Store new version
+            localStorage.setItem('kubetetris_version', this.gameVersion);
+            
+            console.log('Game caches cleared for new version');
+        }
+    }
+    
+    // Manual cache clearing method (can be called from console)
+    forceClearCache() {
+        console.log('Manually clearing all caches...');
+        
+        // Clear localStorage except for high scores
+        const highScores = localStorage.getItem('kubetetris_highscores');
+        localStorage.clear();
+        if (highScores) {
+            localStorage.setItem('kubetetris_highscores', highScores);
+        }
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear service worker caches
+        if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+                cacheNames.forEach(cacheName => {
+                    caches.delete(cacheName);
+                    console.log(`Cleared cache: ${cacheName}`);
+                });
+            });
+        }
+        
+        // Force page reload to ensure fresh assets
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 500);
+        
+        console.log('Cache cleared! Page will reload...');
+    }
+
     resizeCanvas() {
         // Calculate available space for the canvas
         const container = document.querySelector('.canvas-container');
@@ -141,12 +213,15 @@ class KubeTetris {
     }
     
     async loadAssets() {
+        // Cache busting parameter for fresh assets
+        const cacheBuster = `?v=${this.gameVersion}&t=${Date.now()}`;
+        
         // Load pod images
         const podTypes = this.getPodTypes();
         for (const [key, pod] of Object.entries(podTypes)) {
             if (pod.image) {
                 const img = new Image();
-                img.src = pod.image;
+                img.src = pod.image + cacheBuster;
                 await new Promise((resolve) => {
                     img.onload = resolve;
                     img.onerror = resolve; // Continue even if image fails to load
@@ -160,7 +235,7 @@ class KubeTetris {
         for (const [key, resource] of Object.entries(resourceTypes)) {
             if (resource.image) {
                 const img = new Image();
-                img.src = resource.image;
+                img.src = resource.image + cacheBuster;
                 await new Promise((resolve) => {
                     img.onload = resolve;
                     img.onerror = resolve; // Continue even if image fails to load
@@ -182,19 +257,11 @@ class KubeTetris {
         
         // Create node foundation (bottom row)
         for (let x = 0; x < this.BOARD_WIDTH; x++) {
+            const nodeResources = this.generateRandomNodeCapacity();
             this.board[this.BOARD_HEIGHT - 1][x] = {
                 type: 'node',
                 nodeId: x,
-                resources: { 
-                    totalCpu: 64, 
-                    totalRam: 128,
-                    totalSsd: 500,
-                    totalGpu: 16,
-                    usedCpu: 0, 
-                    usedRam: 0,
-                    usedSsd: 0,
-                    usedGpu: 0
-                },
+                resources: nodeResources,
                 specialization: this.getNodeSpecialization(x),
                 pods: [],
                 filled: false
@@ -202,31 +269,46 @@ class KubeTetris {
         }
     }
     
+    // Generate random node capacity within specified ranges
+    generateRandomNodeCapacity() {
+        const capacityRanges = {
+            cpu: [4, 8, 16, 32, 48, 64],          // 4 to 64 cores
+            ram: [16, 32, 64, 96, 128],           // 16GB to 128GB
+            ssd: [128, 256, 512, 1024, 2048],     // 128GB to 2TB (in GB)
+            gpu: [0, 0, 0, 4, 8, 16, 24, 32, 48]  // 0 to 48GB GPU (more chance for 0)
+        };
+        
+        const generated = {
+            totalCpu: capacityRanges.cpu[Math.floor(Math.random() * capacityRanges.cpu.length)],
+            totalRam: capacityRanges.ram[Math.floor(Math.random() * capacityRanges.ram.length)],
+            totalSsd: capacityRanges.ssd[Math.floor(Math.random() * capacityRanges.ssd.length)],
+            totalGpu: capacityRanges.gpu[Math.floor(Math.random() * capacityRanges.gpu.length)],
+            usedCpu: 0,
+            usedRam: 0,
+            usedSsd: 0,
+            usedGpu: 0
+        };
+        
+        return generated;
+    }
+
     initializeNodes() {
         this.nodes = [];
         for (let i = 0; i < this.BOARD_WIDTH; i++) {
+            // Use the same resources that were already generated for the board
+            const boardNodeResources = this.board[this.BOARD_HEIGHT - 1][i].resources;
             const nodeData = {
                 id: i,
                 name: `node-${i}`,
-                resources: { 
-                    totalCpu: 64, 
-                    totalRam: 128,
-                    totalSsd: 500,
-                    totalGpu: 16,
-                    usedCpu: 0, 
-                    usedRam: 0,
-                    usedSsd: 0,
-                    usedGpu: 0
-                },
+                resources: { ...boardNodeResources }, // Copy from board
                 specialization: this.getNodeSpecialization(i),
                 pods: []
             };
             this.nodes.push(nodeData);
             
-            // Sync with board - copy all resources
+            // Sync specialization back to board
             if (this.board[this.BOARD_HEIGHT - 1][i]) {
                 this.board[this.BOARD_HEIGHT - 1][i].specialization = nodeData.specialization;
-                this.board[this.BOARD_HEIGHT - 1][i].resources = { ...nodeData.resources };
             }
         }
     }
@@ -1037,7 +1119,7 @@ class KubeTetris {
                         this.triggerBucketShake(x, targetY);
                     } else {
                         // Can't place pod here due to resource constraints - Game Over!
-                        this.gameOver(`Node ${x} ran out of resources! No space for ${this.currentPod.type} pod.`);
+                        this.gameOver(`Node ${x} ran out of resources! No space for the new ${this.currentPod.type} pod.`);
                         return;
                     }
                 }
@@ -1618,12 +1700,20 @@ class KubeTetris {
         this.nodes.forEach((node, index) => {
             const cpuPercent = Math.round((node.resources.usedCpu / node.resources.totalCpu) * 100);
             const memPercent = Math.round((node.resources.usedRam / node.resources.totalRam) * 100);
-            const status = Math.max(cpuPercent, memPercent) > 80 ? '🔴' : 
-                          Math.max(cpuPercent, memPercent) > 60 ? '🟡' : '🟢';
+            const ssdPercent = Math.round((node.resources.usedSsd / node.resources.totalSsd) * 100);
+            const gpuPercent = node.resources.totalGpu > 0 ? Math.round((node.resources.usedGpu / node.resources.totalGpu) * 100) : 0;
+            
+            const maxPercent = Math.max(cpuPercent, memPercent, ssdPercent, gpuPercent);
+            const status = maxPercent > 80 ? '🔴' : maxPercent > 60 ? '🟡' : '🟢';
+            
+            const gpuDisplay = node.resources.totalGpu > 0 ? `, ${gpuPercent}% GPU` : '';
             
             nodeStatus += `
                 <div class="constraint-item">
-                    ${status} Node ${index}: ${cpuPercent}% CPU, ${memPercent}% RAM
+                    ${status} N${index}: ${cpuPercent}%CPU, ${memPercent}%RAM, ${ssdPercent}%SSD${gpuDisplay}
+                    <div style="font-size: 10px; opacity: 0.8;">
+                        Total: ${node.resources.totalCpu}C/${node.resources.totalRam}G/${node.resources.totalSsd}G${node.resources.totalGpu > 0 ? `/${node.resources.totalGpu}GPU` : ''}
+                    </div>
                 </div>
             `;
         });
@@ -2506,3 +2596,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 100);
 });
+
+// Global function for easy cache clearing from browser console
+window.clearGameCache = function() {
+    if (window.game && typeof window.game.forceClearCache === 'function') {
+        window.game.forceClearCache();
+    } else {
+        console.log('Clearing caches manually...');
+        
+        // Clear localStorage except high scores
+        const highScores = localStorage.getItem('kubetetris_highscores');
+        localStorage.clear();
+        if (highScores) {
+            localStorage.setItem('kubetetris_highscores', highScores);
+        }
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear browser caches
+        if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+                cacheNames.forEach(cacheName => {
+                    caches.delete(cacheName);
+                });
+            });
+        }
+        
+        console.log('Cache cleared! Please refresh the page manually.');
+    }
+};
+
+console.log('💡 Tip: Type clearGameCache() in console to force clear all caches');
