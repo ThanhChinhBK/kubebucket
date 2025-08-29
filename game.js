@@ -262,7 +262,12 @@ class KubeTetris {
             frontend: {
                 symbol: 'F',
                 color: '#e74c3c',
-                resources: { cpu: 1, ram: 4, ssd: 10, gpu: 0 },
+                resourceRanges: { 
+                    cpu: [0.5, 1], 
+                    ram: [1, 1, 2, 4], 
+                    ssd: [2, 2, 4, 4, 5, 10], 
+                    gpu: [0] 
+                },
                 dependencies: ['backend'],
                 preferredNode: 'EDGE', // Prefers edge nodes for low latency
                 image: './assets/pod-frontend.svg'
@@ -270,7 +275,12 @@ class KubeTetris {
             backend: {
                 symbol: 'B', 
                 color: '#3498db',
-                resources: { cpu: 2, ram: 8, ssd: 20, gpu: 0 },
+                resourceRanges: { 
+                    cpu: [1, 2, 4], 
+                    ram: [1, 1, 2, 2, 4, 8, 12], 
+                    ssd: [10, 20, 30], 
+                    gpu: [0, 1] 
+                },
                 dependencies: ['database', 'cache'],
                 preferredNode: 'CPU', // Prefers CPU-optimized nodes
                 image: './assets/pod-backend.svg'
@@ -278,7 +288,12 @@ class KubeTetris {
             database: {
                 symbol: 'D',
                 color: '#27ae60',
-                resources: { cpu: 3, ram: 12, ssd: 50, gpu: 0 },
+                resourceRanges: { 
+                    cpu: [2, 4, 6], 
+                    ram: [8, 16, 24], 
+                    ssd: [20, 40, 60], 
+                    gpu: [0] 
+                },
                 dependencies: [],
                 preferredNode: 'SSD', // Prefers SSD storage nodes
                 image: './assets/pod-db.svg'
@@ -286,7 +301,12 @@ class KubeTetris {
             cache: {
                 symbol: 'C',
                 color: '#f39c12',
-                resources: { cpu: 1, ram: 16, ssd: 5, gpu: 0 },
+                resourceRanges: { 
+                    cpu: [0.5, 1, 2], 
+                    ram: [8, 16, 32, 32, 64, 64], 
+                    ssd: [20, 50, 100], 
+                    gpu: [0] 
+                },
                 dependencies: [],
                 preferredNode: 'RAM', // Prefers memory-optimized nodes
                 image: './assets/pod-cache.svg'
@@ -294,7 +314,12 @@ class KubeTetris {
             monitor: {
                 symbol: 'M',
                 color: '#9b59b6',
-                resources: { cpu: 1, ram: 2, ssd: 8, gpu: 0 },
+                resourceRanges: { 
+                    cpu: [0.5, 1], 
+                    ram: [1, 2, 4], 
+                    ssd: [5, 10], 
+                    gpu: [0] 
+                },
                 dependencies: [],
                 preferredNode: 'NET', // Prefers network-optimized nodes
                 image: './assets/pod-monitor.svg'
@@ -302,7 +327,12 @@ class KubeTetris {
             mltask: {
                 symbol: 'ML',
                 color: '#ff6b6b',
-                resources: { cpu: 4, ram: 16, ssd: 30, gpu: 2 },
+                resourceRanges: { 
+                    cpu: [1, 1, 1, 2, 4, 8], 
+                    ram: [8, 16, 32], 
+                    ssd: [20, 40, 80], 
+                    gpu: [1, 2, 4, 4, 8, 8, 8, 16, 16, 16] 
+                },
                 dependencies: [],
                 preferredNode: 'GPU', // Prefers GPU nodes for ML tasks
                 image: './assets/pod-mltask.svg'
@@ -316,37 +346,48 @@ class KubeTetris {
             ram: {
                 symbol: 'R',
                 color: '#4ecdc4',
-                capacity: { ram: 32 },
+                capacityRanges: { ram: [2, 4, 8] },
                 description: 'RAM Upgrade',
                 image: './assets/resource-ram.svg'
             },
             cpu: {
                 symbol: 'CP',
                 color: '#45b7d1',
-                capacity: { cpu: 16 },
+                capacityRanges: { cpu: [2, 4, 8] },
                 description: 'CPU Upgrade',
                 image: './assets/resource-cpu.svg'
             },
             ssd: {
                 symbol: 'S',
                 color: '#34495e',
-                capacity: { ssd: 200 },
+                capacityRanges: { ssd: [20, 40, 80] },
                 description: 'SSD Storage',
                 image: './assets/resource-ssd.svg'
             },
             gpu: {
                 symbol: 'G',
                 color: '#feca57',
-                capacity: { gpu: 8 },
+                capacityRanges: { gpu: [1, 2, 4] },
                 description: 'GPU Unit',
                 image: './assets/resource-gpu.svg'
             }
         };
     }
     
+    // Helper method to randomly select from an array or return single value
+    getRandomResourceValue(resourceRanges, resourceType) {
+        const range = resourceRanges[resourceType];
+        if (!range || range.length === 0) return 0;
+        if (range.length === 1) return range[0];
+        
+        // Randomly select from the available options
+        const randomIndex = Math.floor(Math.random() * range.length);
+        return range[randomIndex];
+    }
+    
     createRandomDrop() {
-        // 70% chance of pod, 30% chance of resource
-        const isPod = Math.random() < 0.7;
+        // 83% chance of pod, 17% chance of resource (approximately 5:1 ratio)
+        const isPod = Math.random() < 0.83;
         
         if (isPod) {
             return this.createRandomPod();
@@ -360,13 +401,21 @@ class KubeTetris {
         const type = types[Math.floor(Math.random() * types.length)];
         const podType = this.getPodTypes()[type];
         
+        // Generate random resources based on the defined ranges
+        const resources = {
+            cpu: this.getRandomResourceValue(podType.resourceRanges, 'cpu'),
+            ram: this.getRandomResourceValue(podType.resourceRanges, 'ram'),
+            ssd: this.getRandomResourceValue(podType.resourceRanges, 'ssd'),
+            gpu: this.getRandomResourceValue(podType.resourceRanges, 'gpu')
+        };
+        
         // Single pod only (no tetromino shapes)
         return {
             type: type,
             dropType: 'pod',
             symbol: podType.symbol,
             color: podType.color,
-            resources: { ...podType.resources }, // Copy resources
+            resources: resources,
             dependencies: [...podType.dependencies], // Copy dependencies
             preferredNode: podType.preferredNode,
             shape: [[1]], // Always single cell
@@ -381,12 +430,18 @@ class KubeTetris {
         const type = types[Math.floor(Math.random() * types.length)];
         const resourceType = this.getResourceTypes()[type];
         
+        // Generate random capacity based on the defined ranges
+        const capacity = {};
+        for (const [resourceKey, range] of Object.entries(resourceType.capacityRanges)) {
+            capacity[resourceKey] = this.getRandomResourceValue(resourceType.capacityRanges, resourceKey);
+        }
+        
         return {
             type: type,
             dropType: 'resource',
             symbol: resourceType.symbol,
             color: resourceType.color,
-            capacity: { ...resourceType.capacity }, // Copy capacity increases
+            capacity: capacity,
             description: resourceType.description,
             shape: [[1]], // Always single cell
             x: Math.floor(this.BOARD_WIDTH / 2),
@@ -1041,7 +1096,7 @@ class KubeTetris {
             this.nodes[node.nodeId].resources = { ...node.resources };
         }
         
-        console.log(`Applied ${resource.description} to Node ${node.nodeId}`);
+        console.log(`Applied ${resource.description} (+${JSON.stringify(resource.capacity)}) to Node ${node.nodeId}`);
     }
     
     triggerLandingAnimation(x, y) {
@@ -1644,11 +1699,14 @@ class KubeTetris {
     }
     
     drawGrid() {
-        // Cyberpunk grid with neon glow
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+        // Enhanced cyberpunk grid with multiple layers and pulsing effects
+        this.ctx.save();
+        
+        // Main grid with neon glow
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
         this.ctx.lineWidth = 1;
         this.ctx.shadowColor = '#00FFFF';
-        this.ctx.shadowBlur = 5;
+        this.ctx.shadowBlur = 8;
         
         // Vertical lines
         for (let x = 0; x <= this.BOARD_WIDTH; x++) {
@@ -1666,8 +1724,41 @@ class KubeTetris {
             this.ctx.stroke();
         }
         
+        // Secondary grid with purple glow
+        this.ctx.strokeStyle = 'rgba(255, 0, 255, 0.2)';
+        this.ctx.lineWidth = 1;
+        this.ctx.shadowColor = '#FF00FF';
+        this.ctx.shadowBlur = 4;
+        
+        // Diagonal accent lines
+        for (let i = 0; i < this.BOARD_WIDTH + this.BOARD_HEIGHT; i++) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i * this.CELL_SIZE / 2, 0);
+            this.ctx.lineTo(0, i * this.CELL_SIZE / 2);
+            this.ctx.stroke();
+        }
+        
+        // Pulsing corner markers
+        const pulseIntensity = (Math.sin(Date.now() / 1000) + 1) / 2;
+        this.ctx.fillStyle = `rgba(0, 255, 255, ${0.3 + pulseIntensity * 0.3})`;
+        this.ctx.shadowColor = '#00FFFF';
+        this.ctx.shadowBlur = 15;
+        
+        // Corner markers
+        const markerSize = 8;
+        const positions = [
+            [0, 0], [this.BOARD_WIDTH * this.CELL_SIZE - markerSize, 0],
+            [0, this.BOARD_HEIGHT * this.CELL_SIZE - markerSize],
+            [this.BOARD_WIDTH * this.CELL_SIZE - markerSize, this.BOARD_HEIGHT * this.CELL_SIZE - markerSize]
+        ];
+        
+        positions.forEach(([x, y]) => {
+            this.ctx.fillRect(x, y, markerSize, markerSize);
+        });
+        
         // Reset shadow
         this.ctx.shadowBlur = 0;
+        this.ctx.restore();
     }
     
     drawBoard() {
@@ -1736,7 +1827,7 @@ class KubeTetris {
         }
         
         // Resource information overlay (always drawn) - mobile responsive font sizes
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#00FFFF'; // Cyberpunk cyan instead of white
         const baseFontSize = isMobile ? Math.max(8, this.CELL_SIZE / 8) : Math.max(10, this.CELL_SIZE / 8);
         this.ctx.font = `bold ${baseFontSize}px Roboto Mono`;
         this.ctx.textAlign = 'center';
@@ -1747,13 +1838,15 @@ class KubeTetris {
         const lineHeight = baseFontSize + 2;
         let currentY = cellY + (isMobile ? 8 : 16);
         
-        // CPU info with outline for better visibility
+        // CPU info with outline for better visibility - cyberpunk orange
+        this.ctx.fillStyle = '#FF6600';
         const cpuText = `C:${node.resources.usedCpu}/${node.resources.totalCpu}`;
         this.ctx.strokeText(cpuText, cellX + this.CELL_SIZE / 2, currentY);
         this.ctx.fillText(cpuText, cellX + this.CELL_SIZE / 2, currentY);
         currentY += lineHeight;
         
-        // Memory info with outline - now showing RAM
+        // Memory info with outline - cyberpunk green
+        this.ctx.fillStyle = '#00FF66';
         const ramDisplayText = `R:${node.resources.usedRam}/${node.resources.totalRam}`;
         this.ctx.strokeText(ramDisplayText, cellX + this.CELL_SIZE / 2, currentY);
         this.ctx.fillText(ramDisplayText, cellX + this.CELL_SIZE / 2, currentY);
@@ -1761,13 +1854,15 @@ class KubeTetris {
         
         // Only show SSD and GPU on larger screens or larger cells
         if (!isMobile || this.CELL_SIZE > 60) {
-            // SSD info
+            // SSD info - cyberpunk purple
+            this.ctx.fillStyle = '#9966FF';
             const ssdText = `S:${node.resources.usedSsd}/${node.resources.totalSsd}`;
             this.ctx.strokeText(ssdText, cellX + this.CELL_SIZE / 2, currentY);
             this.ctx.fillText(ssdText, cellX + this.CELL_SIZE / 2, currentY);
             currentY += lineHeight;
             
-            // GPU info
+            // GPU info - cyberpunk yellow
+            this.ctx.fillStyle = '#FFFF00';
             const gpuText = `G:${node.resources.usedGpu}/${node.resources.totalGpu}`;
             this.ctx.strokeText(gpuText, cellX + this.CELL_SIZE / 2, currentY);
             this.ctx.fillText(gpuText, cellX + this.CELL_SIZE / 2, currentY);
@@ -1797,17 +1892,26 @@ class KubeTetris {
     }
     
     drawBucketManual(cellX, cellY, node) {
-        // Cyberpunk bucket drawing with neon effects
+        // Enhanced cyberpunk bucket drawing with holographic effects
         const bucketWidth = this.CELL_SIZE - 8;
         const bucketHeight = this.CELL_SIZE - 8;
         const rimHeight = 8;
         
-        // Neon glow effect
-        this.ctx.shadowColor = '#00FFFF';
-        this.ctx.shadowBlur = 20;
+        this.ctx.save();
         
-        // Bucket body (trapezoid shape) - dark cyberpunk base
-        this.ctx.fillStyle = '#0a0a0a';
+        // Holographic base glow
+        const glowIntensity = (Math.sin(Date.now() / 800) + 1) / 2;
+        this.ctx.shadowColor = '#00FFFF';
+        this.ctx.shadowBlur = 20 + glowIntensity * 10;
+        
+        // Bucket body (trapezoid shape) - darker cyberpunk base with gradient
+        const bodyGradient = this.ctx.createLinearGradient(cellX, cellY, cellX, cellY + bucketHeight);
+        bodyGradient.addColorStop(0, '#0a0a0a');
+        bodyGradient.addColorStop(0.3, '#1a1a2e');
+        bodyGradient.addColorStop(0.7, '#16213e');
+        bodyGradient.addColorStop(1, '#0a0a0a');
+        this.ctx.fillStyle = bodyGradient;
+        
         this.ctx.beginPath();
         this.ctx.moveTo(cellX + 8, cellY + 4); // Top left
         this.ctx.lineTo(cellX + bucketWidth, cellY + 4); // Top right
@@ -1816,16 +1920,39 @@ class KubeTetris {
         this.ctx.closePath();
         this.ctx.fill();
         
-        // Cyberpunk rim with gradient
-        const gradient = this.ctx.createLinearGradient(cellX, cellY, cellX, cellY + rimHeight);
-        gradient.addColorStop(0, '#00FFFF');
-        gradient.addColorStop(1, '#FF00FF');
-        this.ctx.fillStyle = gradient;
+        // Holographic rim with rainbow gradient
+        const rimGradient = this.ctx.createLinearGradient(cellX, cellY, cellX, cellY + rimHeight);
+        rimGradient.addColorStop(0, '#00FFFF');
+        rimGradient.addColorStop(0.3, '#0099FF');
+        rimGradient.addColorStop(0.6, '#FF00FF');
+        rimGradient.addColorStop(1, '#00FF99');
+        this.ctx.fillStyle = rimGradient;
         this.ctx.fillRect(cellX + 6, cellY + 4, bucketWidth + 4, rimHeight);
         
-        // Neon outline - bright cyan
-        this.ctx.strokeStyle = '#00FFFF';
-        this.ctx.lineWidth = 3;
+        // Data flow lines on bucket sides
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+        this.ctx.lineWidth = 1;
+        this.ctx.shadowBlur = 5;
+        
+        const flowOffset = (Date.now() / 100) % 20;
+        for (let i = 0; i < 3; i++) {
+            const y = cellY + 15 + i * 12 + flowOffset;
+            this.ctx.beginPath();
+            this.ctx.moveTo(cellX + 10, y);
+            this.ctx.lineTo(cellX + 18, y);
+            this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(cellX + bucketWidth - 10, y);
+            this.ctx.lineTo(cellX + bucketWidth - 2, y);
+            this.ctx.stroke();
+        }
+        
+        // Enhanced neon outline with pulsing effect
+        this.ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + glowIntensity * 0.2})`;
+        this.ctx.lineWidth = 2 + glowIntensity;
+        this.ctx.shadowBlur = 15 + glowIntensity * 5;
+        
         this.ctx.beginPath();
         this.ctx.moveTo(cellX + 8, cellY + 4);
         this.ctx.lineTo(cellX + bucketWidth, cellY + 4);
@@ -1834,10 +1961,14 @@ class KubeTetris {
         this.ctx.closePath();
         this.ctx.stroke();
         
-        // Rim outline
+        // Enhanced rim outline with secondary glow
+        this.ctx.strokeStyle = `rgba(255, 0, 255, ${0.6 + glowIntensity * 0.3})`;
+        this.ctx.lineWidth = 1;
+        this.ctx.shadowColor = '#FF00FF';
+        this.ctx.shadowBlur = 8;
         this.ctx.strokeRect(cellX + 6, cellY + 4, bucketWidth + 4, rimHeight);
         
-        // Resource fill level
+        // Resource fill level with holographic liquid
         const totalResources = node.resources.totalCpu + node.resources.totalRam;
         const usedResources = node.resources.usedCpu + node.resources.usedRam;
         const fillPercent = usedResources / totalResources;
@@ -1846,23 +1977,60 @@ class KubeTetris {
             const fillHeight = (bucketHeight - rimHeight - 4) * fillPercent;
             const fillY = cellY + bucketHeight - fillHeight;
             
-            this.ctx.fillStyle = fillPercent > 0.8 ? 'rgba(231, 76, 60, 0.7)' : 
-                                fillPercent > 0.6 ? 'rgba(243, 156, 18, 0.7)' : 'rgba(39, 174, 96, 0.7)';
+            // Animated liquid with wave effect
+            const waveOffset = Math.sin(Date.now() / 500 + cellX / 20) * 2;
             
-            // Draw trapezoid fill
+            // Liquid gradient based on fill level
+            const liquidGradient = this.ctx.createLinearGradient(cellX, fillY, cellX, cellY + bucketHeight);
+            if (fillPercent > 0.8) {
+                liquidGradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
+                liquidGradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.6)');
+                liquidGradient.addColorStop(1, 'rgba(255, 0, 0, 0.9)');
+            } else if (fillPercent > 0.6) {
+                liquidGradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
+                liquidGradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.6)');
+                liquidGradient.addColorStop(1, 'rgba(255, 215, 0, 0.9)');
+            } else {
+                liquidGradient.addColorStop(0, 'rgba(0, 255, 100, 0.8)');
+                liquidGradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.6)');
+                liquidGradient.addColorStop(1, 'rgba(0, 255, 100, 0.9)');
+            }
+            
+            this.ctx.fillStyle = liquidGradient;
+            this.ctx.shadowColor = fillPercent > 0.8 ? '#FF0000' : fillPercent > 0.6 ? '#FFD700' : '#00FF64';
+            this.ctx.shadowBlur = 10;
+            
+            // Draw trapezoid fill with wave effect
             this.ctx.beginPath();
-            this.ctx.moveTo(cellX + 16, fillY);
-            this.ctx.lineTo(cellX + bucketWidth - 8, fillY);
+            this.ctx.moveTo(cellX + 16, fillY + waveOffset);
+            this.ctx.lineTo(cellX + bucketWidth - 8, fillY + waveOffset);
             this.ctx.lineTo(cellX + bucketWidth - 14, cellY + bucketHeight - 2);
             this.ctx.lineTo(cellX + 16, cellY + bucketHeight - 2);
             this.ctx.closePath();
             this.ctx.fill();
+            
+            // Liquid surface reflection
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            this.ctx.shadowBlur = 0;
+            this.ctx.fillRect(cellX + 16, fillY + waveOffset, bucketWidth - 24, 1);
         }
         
-        // Handle icons for bucket
-        this.ctx.fillStyle = '#7f8c8d';
-        this.ctx.fillRect(cellX + 4, cellY + 6, 4, 6);
-        this.ctx.fillRect(cellX + bucketWidth + 4, cellY + 6, 4, 6);
+        // Holographic handles with glow
+        this.ctx.fillStyle = `rgba(0, 255, 255, ${0.7 + glowIntensity * 0.3})`;
+        this.ctx.shadowColor = '#00FFFF';
+        this.ctx.shadowBlur = 8;
+        
+        // Left handle
+        this.ctx.fillRect(cellX + 2, cellY + 6, 6, 8);
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(cellX + 2, cellY + 6, 6, 8);
+        
+        // Right handle
+        this.ctx.fillRect(cellX + bucketWidth + 2, cellY + 6, 6, 8);
+        this.ctx.strokeRect(cellX + bucketWidth + 2, cellY + 6, 6, 8);
+        
+        this.ctx.restore();
     }
     
     drawPlacedPod(x, y, pod) {
@@ -1874,12 +2042,12 @@ class KubeTetris {
         this.ctx.fillRect(cellX + 6, cellY + 6, this.CELL_SIZE - 12, this.CELL_SIZE - 12);
         
         // Pod border
-        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.strokeStyle = '#00FFFF'; // Cyberpunk cyan for border
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(cellX + 6, cellY + 6, this.CELL_SIZE - 12, this.CELL_SIZE - 12);
         
         // Pod symbol
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#00FFFF'; // Cyberpunk cyan for symbol
         this.ctx.font = 'bold 28px Roboto Mono';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -1889,7 +2057,7 @@ class KubeTetris {
         const fontSize = Math.max(8, this.CELL_SIZE / 12);
         
         // Pod resource info with better stroke for visibility
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#00FF66'; // Cyberpunk green for resource info
         this.ctx.font = `bold ${fontSize}px Roboto Mono`;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'top';
@@ -1947,52 +2115,85 @@ class KubeTetris {
     drawPodVisual(x, y, pod) {
         const isMobile = window.innerWidth <= 768;
         
+        this.ctx.save();
+        
+        // Enhanced holographic glow effect
+        const glowIntensity = (Math.sin(Date.now() / 600 + x / 50) + 1) / 2;
+        this.ctx.shadowColor = pod.color;
+        this.ctx.shadowBlur = 20 + glowIntensity * 10;
+        
         // Check if we have an image for this pod type
         const podImage = this.images[`pod_${pod.type}`];
         
         if (podImage && this.assetsLoaded) {
-            // Draw the pod image
+            // Draw holographic background effect
+            const bgGradient = this.ctx.createRadialGradient(
+                x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, 0,
+                x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, this.CELL_SIZE / 2
+            );
+            bgGradient.addColorStop(0, `${pod.color}20`);
+            bgGradient.addColorStop(0.7, `${pod.color}10`);
+            bgGradient.addColorStop(1, 'transparent');
+            this.ctx.fillStyle = bgGradient;
+            this.ctx.fillRect(x + 6, y + 6, this.CELL_SIZE - 12, this.CELL_SIZE - 12);
+            
+            // Draw the pod image with enhanced effects
             const padding = isMobile ? 6 : 10;
             const imageSize = this.CELL_SIZE - (padding * 2);
+            
+            // Add scanning line effect
+            const scanOffset = (Date.now() / 20) % (this.CELL_SIZE + 20);
+            this.ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+            this.ctx.fillRect(x + padding, y + padding + scanOffset - 10, imageSize, 2);
+            
             this.ctx.drawImage(podImage, x + padding, y + padding, imageSize, imageSize);
             
-            // Add a subtle border
-            this.ctx.strokeStyle = pod.color;
+            // Add holographic border with enhanced effects
+            this.ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + glowIntensity * 0.2})`;
             this.ctx.lineWidth = 2;
+            this.ctx.shadowBlur = 10;
             this.ctx.strokeRect(x + padding, y + padding, imageSize, imageSize);
+            
         } else {
-            // Fallback to original drawing code
-            // Pod background with cyberpunk gradient
+            // Enhanced fallback drawing with cyberpunk aesthetics
             const gradient = this.ctx.createRadialGradient(
                 x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, 0,
                 x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, this.CELL_SIZE / 2
             );
             gradient.addColorStop(0, pod.color);
+            gradient.addColorStop(0.3, `${pod.color}AA`);
+            gradient.addColorStop(0.7, `${pod.color}55`);
             gradient.addColorStop(1, '#000000');
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(x + 6, y + 6, this.CELL_SIZE - 12, this.CELL_SIZE - 12);
             
-            // Neon border with animation effect
+            // Enhanced neon border with multiple layers
             this.ctx.strokeStyle = '#00FFFF';
             this.ctx.lineWidth = 2;
+            this.ctx.shadowBlur = 15;
             this.ctx.strokeRect(x + 6, y + 6, this.CELL_SIZE - 12, this.CELL_SIZE - 12);
             
-            // Inner glow border
+            // Inner glow border with pod color
             this.ctx.strokeStyle = pod.color;
             this.ctx.lineWidth = 1;
+            this.ctx.shadowBlur = 8;
             this.ctx.strokeRect(x + 8, y + 8, this.CELL_SIZE - 16, this.CELL_SIZE - 16);
             
-            // Pod symbol with glow - mobile responsive size
-            this.ctx.fillStyle = '#FFFFFF';
+            // Holographic symbol with enhanced glow
+            this.ctx.fillStyle = '#00FFFF'; // Cyberpunk cyan for symbol
             const symbolSize = isMobile ? Math.max(20, this.CELL_SIZE / 2.5) : Math.max(20, this.CELL_SIZE / 3);
             this.ctx.font = `bold ${symbolSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             this.ctx.strokeStyle = pod.color;
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = 3;
+            this.ctx.shadowColor = '#00FFFF'; // Cyberpunk cyan for shadow glow
+            this.ctx.shadowBlur = 15;
             this.ctx.strokeText(pod.symbol, x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2);
             this.ctx.fillText(pod.symbol, x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2);
         }
+        
+        this.ctx.restore();
         
         // Reset shadow for text
         this.ctx.shadowBlur = 0;
@@ -2002,7 +2203,6 @@ class KubeTetris {
         const labelFontSize = isMobile ? Math.max(12, this.CELL_SIZE / 6) : Math.max(10, this.CELL_SIZE / 8);
         
         // Pod resource info (always show for both image and fallback)
-        this.ctx.fillStyle = '#ffffff';
         this.ctx.font = `bold ${fontSize}px Roboto Mono`;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'top';
@@ -2020,10 +2220,14 @@ class KubeTetris {
             let textY = y + 2;
             const lineHeight = Math.max(10, fontSize + 2);
             
+            // CPU in cyberpunk orange
+            this.ctx.fillStyle = '#FF6600';
             this.ctx.strokeText(cpuText, x + 2, textY);
             this.ctx.fillText(cpuText, x + 2, textY);
             
             textY += lineHeight;
+            // RAM in cyberpunk green
+            this.ctx.fillStyle = '#00FF66';
             this.ctx.strokeText(ramText, x + 2, textY);
             this.ctx.fillText(ramText, x + 2, textY);
             
@@ -2031,10 +2235,14 @@ class KubeTetris {
             if (this.CELL_SIZE > 50 && (pod.resources.gpu > 0 || pod.resources.ssd > 0)) {
                 textY += lineHeight;
                 if (pod.resources.gpu > 0) {
+                    // GPU in cyberpunk yellow
+                    this.ctx.fillStyle = '#FFFF00';
                     this.ctx.strokeText(gpuText, x + 2, textY);
                     this.ctx.fillText(gpuText, x + 2, textY);
                 }
                 if (pod.resources.ssd > 0) {
+                    // SSD in cyberpunk purple
+                    this.ctx.fillStyle = '#9966FF';
                     const ssdX = pod.resources.gpu > 0 ? x + 2 + fontSize * 3 : x + 2;
                     this.ctx.strokeText(ssdText, ssdX, textY);
                     this.ctx.fillText(ssdText, ssdX, textY);
@@ -2045,21 +2253,27 @@ class KubeTetris {
             let textY = y + 6;
             const textSpacing = 30;
             
+            // CPU in cyberpunk orange
+            this.ctx.fillStyle = '#FF6600';
             this.ctx.strokeText(cpuText, x + 4, textY);
             this.ctx.fillText(cpuText, x + 4, textY);
             
+            // RAM in cyberpunk green
+            this.ctx.fillStyle = '#00FF66';
             this.ctx.strokeText(ramText, x + 4 + textSpacing, textY);
             this.ctx.fillText(ramText, x + 4 + textSpacing, textY);
             
             // Only show GPU if it's greater than 0 and we have space
             if (pod.resources.gpu > 0) {
+                // GPU in cyberpunk yellow
+                this.ctx.fillStyle = '#FFFF00';
                 this.ctx.strokeText(gpuText, x + 4 + textSpacing * 2, textY);
                 this.ctx.fillText(gpuText, x + 4 + textSpacing * 2, textY);
             }
         }
         
         // Pod type label - always show but with better mobile formatting
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#00FFFF';
         this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
         this.ctx.textAlign = 'center';
         this.ctx.strokeStyle = '#000000';
@@ -2082,58 +2296,159 @@ class KubeTetris {
     drawResource(x, y, resource) {
         const isMobile = window.innerWidth <= 768;
         
+        this.ctx.save();
+        
+        // Enhanced holographic glow for resources
+        const glowIntensity = (Math.sin(Date.now() / 400 + x / 30) + 1) / 2;
+        this.ctx.shadowColor = resource.color;
+        this.ctx.shadowBlur = 25 + glowIntensity * 15;
+        
         // Check if we have an image for this resource type
         const resourceImage = this.images[`resource_${resource.type}`];
         
         if (resourceImage && this.assetsLoaded) {
-            // Draw the resource image
+            // Holographic background for resource
+            const bgGradient = this.ctx.createRadialGradient(
+                x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, 0,
+                x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2, this.CELL_SIZE / 2
+            );
+            bgGradient.addColorStop(0, `${resource.color}40`);
+            bgGradient.addColorStop(0.5, `${resource.color}20`);
+            bgGradient.addColorStop(1, 'transparent');
+            this.ctx.fillStyle = bgGradient;
+            this.ctx.fillRect(x + 5, y + 5, this.CELL_SIZE - 10, this.CELL_SIZE - 10);
+            
+            // Draw the resource image with pulsing effect
             const padding = 5;
             const imageSize = this.CELL_SIZE - (padding * 2);
-            this.ctx.drawImage(resourceImage, x + padding, y + padding, imageSize, imageSize);
+            const pulseScale = 1 + glowIntensity * 0.1;
+            const scaledSize = imageSize * pulseScale;
+            const scalePadding = (imageSize - scaledSize) / 2;
             
-            // Add a subtle border
-            this.ctx.strokeStyle = resource.color;
-            this.ctx.lineWidth = 2;
+            this.ctx.drawImage(resourceImage, 
+                x + padding + scalePadding, 
+                y + padding + scalePadding, 
+                scaledSize, scaledSize);
+            
+            // Enhanced holographic border with energy flow
+            this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 + glowIntensity * 0.2})`;
+            this.ctx.lineWidth = 2 + glowIntensity;
+            this.ctx.shadowBlur = 15;
             this.ctx.strokeRect(x + padding, y + padding, imageSize, imageSize);
-        } else {
-            // Fallback to original diamond shape
-            this.ctx.fillStyle = resource.color;
+            
+            // Energy flow lines around the border
+            this.ctx.strokeStyle = resource.color;
+            this.ctx.lineWidth = 1;
+            this.ctx.shadowBlur = 8;
+            const flowOffset = (Date.now() / 50) % 40;
+            
+            // Top flow
             this.ctx.beginPath();
-            this.ctx.moveTo(x + this.CELL_SIZE / 2, y + 10);
-            this.ctx.lineTo(x + this.CELL_SIZE - 10, y + this.CELL_SIZE / 2);
-            this.ctx.lineTo(x + this.CELL_SIZE / 2, y + this.CELL_SIZE - 10);
-            this.ctx.lineTo(x + 10, y + this.CELL_SIZE / 2);
+            this.ctx.moveTo(x + padding + flowOffset, y + padding);
+            this.ctx.lineTo(x + padding + flowOffset + 10, y + padding);
+            this.ctx.stroke();
+            
+            // Right flow
+            this.ctx.beginPath();
+            this.ctx.moveTo(x + padding + imageSize, y + padding + flowOffset);
+            this.ctx.lineTo(x + padding + imageSize, y + padding + flowOffset + 10);
+            this.ctx.stroke();
+            
+        } else {
+            // Enhanced fallback diamond with cyberpunk effects
+            this.ctx.save();
+            
+            // Rotating diamond with energy trails
+            this.ctx.translate(x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2);
+            this.ctx.rotate((Date.now() / 2000) % (2 * Math.PI));
+            
+            // Energy trail effect
+            for (let i = 0; i < 3; i++) {
+                this.ctx.fillStyle = `${resource.color}${(3-i) * 20}`;
+                this.ctx.shadowBlur = 20 - i * 5;
+                const size = this.CELL_SIZE / 2 - 5 + i * 2;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -size);
+                this.ctx.lineTo(size, 0);
+                this.ctx.lineTo(0, size);
+                this.ctx.lineTo(-size, 0);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+            
+            // Main diamond with holographic fill
+            const diamondGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.CELL_SIZE / 2);
+            diamondGradient.addColorStop(0, resource.color);
+            diamondGradient.addColorStop(0.5, `${resource.color}AA`);
+            diamondGradient.addColorStop(1, `${resource.color}55`);
+            this.ctx.fillStyle = diamondGradient;
+            
+            const size = this.CELL_SIZE / 2 - 10;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, -size);
+            this.ctx.lineTo(size, 0);
+            this.ctx.lineTo(0, size);
+            this.ctx.lineTo(-size, 0);
             this.ctx.closePath();
             this.ctx.fill();
             
-            // Diamond border
+            // Enhanced diamond border
             this.ctx.strokeStyle = '#FFFFFF';
             this.ctx.lineWidth = 3;
+            this.ctx.shadowColor = resource.color;
+            this.ctx.shadowBlur = 15;
             this.ctx.stroke();
             
-            // Resource symbol - larger on mobile
+            // Resource symbol with enhanced glow
             this.ctx.fillStyle = '#000000';
+            this.ctx.shadowColor = '#FFFFFF';
+            this.ctx.shadowBlur = 10;
             const symbolSize = isMobile ? Math.max(14, this.CELL_SIZE / 4) : 16;
             this.ctx.font = `bold ${symbolSize}px Roboto Mono`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(resource.symbol, x + this.CELL_SIZE / 2, y + this.CELL_SIZE / 2);
+            this.ctx.fillText(resource.symbol, 0, 0);
+            
+            this.ctx.restore();
         }
+        
+        this.ctx.restore();
         
         // Reset shadow for text
         this.ctx.shadowBlur = 0;
         
         // Calculate responsive font size - larger for mobile
-        const labelFontSize = isMobile ? Math.max(10, this.CELL_SIZE / 6) : Math.max(12, this.CELL_SIZE / 8);
+        const labelFontSize = isMobile ? Math.max(8, this.CELL_SIZE / 8) : Math.max(10, this.CELL_SIZE / 10);
+        const capacityFontSize = isMobile ? Math.max(10, this.CELL_SIZE / 6) : Math.max(12, this.CELL_SIZE / 7);
+        
+        // Resource capacity values - show what this upgrade adds (make it more prominent)
+        this.ctx.fillStyle = '#00FFFF'; // Cyberpunk cyan for upgrade values
+        this.ctx.font = `bold ${capacityFontSize}px Roboto Mono`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'top';
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3; // Thicker stroke for better visibility
+        
+        // Display capacity upgrade values - position it better
+        const capacityText = Object.entries(resource.capacity)
+            .map(([key, value]) => `+${value}${key.substring(0, 1).toUpperCase()}`)
+            .join(' ');
+        
+        // Position capacity text in the upper part of the cell
+        const capacityY = y + (isMobile ? 10 : 12);
+        this.ctx.strokeText(capacityText, x + this.CELL_SIZE / 2, capacityY);
+        this.ctx.fillText(capacityText, x + this.CELL_SIZE / 2, capacityY);
         
         // Resource description with better text stroke for visibility
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#FF6600'; // Cyberpunk orange for resource description
         this.ctx.font = `bold ${labelFontSize}px Roboto Mono`;
         this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'bottom';
         this.ctx.strokeStyle = '#000000';
         this.ctx.lineWidth = 3; // Thicker stroke for better readability
         
-        const labelY = y + this.CELL_SIZE - (isMobile ? 8 : 10);
+        const labelY = y + this.CELL_SIZE - (isMobile ? 4 : 6);
         this.ctx.strokeText(resource.description, x + this.CELL_SIZE / 2, labelY);
         this.ctx.fillText(resource.description, x + this.CELL_SIZE / 2, labelY);
     }

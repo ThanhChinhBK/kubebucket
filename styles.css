@@ -27,7 +27,7 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Cyberpunk grid overlay */
+/* Enhanced Cyberpunk grid overlay */
 body::before {
     content: '';
     position: fixed;
@@ -36,11 +36,18 @@ body::before {
     width: 100%;
     height: 100%;
     background-image: 
-        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 20px 20px;
     pointer-events: none;
     z-index: -1;
+    animation: grid-flicker 4s ease-in-out infinite alternate;
+}
+
+@keyframes grid-flicker {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+    100% { opacity: 0.4; }
 }
 
 /* Game Container */
@@ -49,17 +56,40 @@ body::before {
     max-height: 100vh;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 15px;
+    background: 
+        linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(10, 10, 30, 0.9) 50%, rgba(0, 8, 20, 0.95) 100%);
+    border-radius: 20px;
     padding: 10px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
     box-shadow: 
-        0 0 30px rgba(0, 255, 255, 0.3),
-        inset 0 0 30px rgba(0, 255, 255, 0.1);
-    border: 1px solid rgba(0, 255, 255, 0.3);
+        0 0 50px rgba(0, 255, 255, 0.4),
+        0 0 100px rgba(255, 0, 255, 0.2),
+        inset 0 0 50px rgba(0, 255, 255, 0.1),
+        inset 0 0 20px rgba(255, 0, 255, 0.05);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+.game-container::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00FFFF, #0099FF, #00FFFF);
+    border-radius: 22px;
+    z-index: -1;
+    animation: border-glow 3s linear infinite;
+}
+
+@keyframes border-glow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }
 
 /* Header */
@@ -68,20 +98,43 @@ body::before {
     margin-bottom: 5px;
     flex-shrink: 0;
     padding: 5px 0;
+    position: relative;
 }
 
 .game-header h1 {
-    font-size: 1.6em;
+    font-size: 1.8em;
     font-weight: 700;
-    color: #61dafb;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(45deg, #00FFFF, #0099FF);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: text-glow 2s ease-in-out infinite alternate;
+    text-shadow: 
+        0 0 10px rgba(0, 255, 255, 0.5),
+        0 0 20px rgba(0, 153, 255, 0.3);
     margin-bottom: 3px;
+    position: relative;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+@keyframes text-glow {
+    0% { 
+        background-position: 0% 50%;
+        filter: brightness(1) drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+    }
+    100% { 
+        background-position: 100% 50%;
+        filter: brightness(1.2) drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.8));
+    }
 }
 
 .game-header p {
     font-size: 0.8em;
     opacity: 0.9;
     margin: 0;
+    color: #00FFFF;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 }
 
 /* Sidebar Left */
@@ -98,26 +151,63 @@ body::before {
 .sidebar-left .controls,
 .sidebar-right .next-pod-display,
 .sidebar-right .drop-types {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: 
+        linear-gradient(135deg, rgba(0, 20, 40, 0.8) 0%, rgba(20, 0, 40, 0.6) 100%);
+    border-radius: 12px;
     padding: 15px;
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    box-shadow: 
+        0 0 20px rgba(0, 255, 255, 0.2),
+        inset 0 0 20px rgba(255, 0, 255, 0.1);
+}
+
+.sidebar-left .high-scores::before,
+.sidebar-left .score-display::before,
+.sidebar-left .controls::before,
+.sidebar-right .next-pod-display::before,
+.sidebar-right .drop-types::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+    animation: scan-line 3s linear infinite;
+}
+
+@keyframes scan-line {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 .sidebar-left h3, .sidebar-right h3 {
     margin-bottom: 10px;
-    color: #61dafb;
+    color: #00FFFF;
     font-size: 1em;
     text-align: center;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .sidebar-left #current-score {
     font-size: 2em;
     font-weight: 700;
-    color: #ffd60a;
+    color: #FFD700;
     text-align: center;
+    text-shadow: 
+        0 0 10px rgba(255, 215, 0, 0.8),
+        0 0 20px rgba(255, 215, 0, 0.4);
+    animation: score-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes score-pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
 }
 
 /* Drop Types Display */
@@ -178,16 +268,40 @@ body::before {
 }
 
 #gameCanvas {
-    border: 3px solid #00FFFF;
-    border-radius: 10px;
-    background: #000814;
+    border: 4px solid transparent;
+    border-radius: 15px;
+    background: 
+        radial-gradient(circle at center, #000814 0%, #000000 100%);
     box-shadow: 
-        0 0 20px rgba(0, 255, 255, 0.5),
-        inset 0 0 20px rgba(0, 255, 255, 0.1);
+        0 0 40px rgba(0, 255, 255, 0.6),
+        0 0 80px rgba(255, 0, 255, 0.3),
+        inset 0 0 40px rgba(0, 255, 255, 0.1),
+        inset 0 0 20px rgba(255, 0, 255, 0.05);
     max-width: 100%;
     max-height: 70vh;
     width: auto;
     height: auto;
+    position: relative;
+}
+
+#gameCanvas::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background: linear-gradient(45deg, #00FFFF, #0099FF, #00FFFF);
+    background-size: 400% 400%;
+    border-radius: 19px;
+    z-index: -1;
+    animation: canvas-border-flow 4s ease-in-out infinite;
+}
+
+@keyframes canvas-border-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* Mobile Controls */
@@ -217,18 +331,22 @@ body::before {
 .mobile-btn {
     flex: 1;
     padding: 15px 10px;
-    border: 2px solid #61dafb;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #001d3d 0%, #003366 100%);
-    color: #61dafb;
+    border: 2px solid #00FFFF;
+    border-radius: 12px;
+    background: 
+        linear-gradient(135deg, #001122 0%, #002244 50%, #001133 100%);
+    color: #00FFFF;
     font-family: 'Roboto Mono', monospace;
     font-weight: 700;
     font-size: 0.9em;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(0, 255, 255, 0.2),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -240,6 +358,7 @@ body::before {
     /* Improved haptic feedback */
     position: relative;
     overflow: hidden;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
 }
 
 .mobile-btn::before {
@@ -250,7 +369,7 @@ body::before {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 255, 255, 0.3);
     transition: width 0.3s ease, height 0.3s ease;
     transform: translate(-50%, -50%);
     z-index: 0;
@@ -263,16 +382,24 @@ body::before {
 
 .mobile-btn.active {
     transform: translateY(2px) scale(0.95);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #003366 0%, #001d3d 100%);
-    border-color: #4fc3f7;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(0, 255, 255, 0.4),
+        inset 0 0 30px rgba(0, 255, 255, 0.2);
+    background: 
+        linear-gradient(135deg, #002244 0%, #001122 50%, #002233 100%);
+    border-color: #00DDDD;
 }
 
 .mobile-btn:active {
     transform: translateY(2px) scale(0.95);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #003366 0%, #001d3d 100%);
-    border-color: #4fc3f7;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(0, 255, 255, 0.4),
+        inset 0 0 30px rgba(0, 255, 255, 0.2);
+    background: 
+        linear-gradient(135deg, #002244 0%, #001122 50%, #002233 100%);
+    border-color: #00DDDD;
 }
 
 .mobile-btn.move-btn {
@@ -282,25 +409,47 @@ body::before {
 }
 
 .mobile-btn.action-btn {
-    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
-    border-color: #ffd60a;
-    color: #ffd60a;
+    background: 
+        linear-gradient(135deg, #442200 0%, #663300 50%, #441100 100%);
+    border-color: #FFD700;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(255, 215, 0, 0.2),
+        inset 0 0 20px rgba(255, 215, 0, 0.1);
 }
 
 .mobile-btn.action-btn:active {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    border-color: #ffcc02;
+    background: 
+        linear-gradient(135deg, #663300 0%, #442200 50%, #552200 100%);
+    border-color: #FFCC00;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(255, 215, 0, 0.4),
+        inset 0 0 30px rgba(255, 215, 0, 0.2);
 }
 
 .mobile-btn.reset-btn {
-    background: linear-gradient(135deg, #8b2635 0%, #5d1a24 100%);
-    border-color: #e74c3c;
-    color: #e74c3c;
+    background: 
+        linear-gradient(135deg, #330011 0%, #550022 50%, #440011 100%);
+    border-color: #FF0066;
+    color: #FF0066;
+    text-shadow: 0 0 10px rgba(255, 0, 102, 0.7);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(255, 0, 102, 0.2),
+        inset 0 0 20px rgba(255, 0, 102, 0.1);
 }
 
 .mobile-btn.reset-btn:active {
-    background: linear-gradient(135deg, #5d1a24 0%, #8b2635 100%);
-    border-color: #c0392b;
+    background: 
+        linear-gradient(135deg, #550022 0%, #330011 50%, #440022 100%);
+    border-color: #FF0044;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(255, 0, 102, 0.4),
+        inset 0 0 30px rgba(255, 0, 102, 0.2);
 }
 
 /* Show/Hide Controls Based on Device */
