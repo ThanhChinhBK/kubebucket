@@ -1,62 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="cpuGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#2471a3;stop-opacity:1" />
+    <linearGradient id="cpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ccff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0099cc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#006699;stop-opacity:1" />
     </linearGradient>
-    <radialGradient id="cpuGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
-    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Resource crystal shape -->
-  <polygon points="30,8 45,22 45,38 30,52 15,38 15,22" 
-           fill="url(#cpuGradient)" stroke="#1f5582" stroke-width="2"/>
+  <!-- Outer square frame -->
+  <rect x="15" y="15" width="70" height="70" 
+        fill="none" stroke="#00ccff" stroke-width="2" opacity="0.8"/>
   
-  <!-- Inner glow -->
-  <polygon points="30,12 41,24 41,36 30,48 19,36 19,24" 
-           fill="url(#cpuGlow)"/>
+  <!-- CPU chip body -->
+  <rect x="25" y="25" width="50" height="50" rx="3" 
+        fill="url(#cpuGrad)" stroke="#00ccff" stroke-width="1.5" filter="url(#glow)"/>
   
-  <!-- CPU chip -->
-  <rect x="20" y="20" width="20" height="20" fill="#2c3e50" stroke="#34495e" stroke-width="1" rx="2"/>
+  <!-- CPU contact grid -->
+  <g fill="#000000" opacity="0.7">
+    <rect x="35" y="35" width="4" height="4"/>
+    <rect x="42" y="35" width="4" height="4"/>
+    <rect x="49" y="35" width="4" height="4"/>
+    <rect x="56" y="35" width="4" height="4"/>
+    
+    <rect x="35" y="42" width="4" height="4"/>
+    <rect x="42" y="42" width="4" height="4"/>
+    <rect x="49" y="42" width="4" height="4"/>
+    <rect x="56" y="42" width="4" height="4"/>
+    
+    <rect x="35" y="49" width="4" height="4"/>
+    <rect x="42" y="49" width="4" height="4"/>
+    <rect x="49" y="49" width="4" height="4"/>
+    <rect x="56" y="49" width="4" height="4"/>
+    
+    <rect x="35" y="56" width="4" height="4"/>
+    <rect x="42" y="56" width="4" height="4"/>
+    <rect x="49" y="56" width="4" height="4"/>
+    <rect x="56" y="56" width="4" height="4"/>
+  </g>
   
-  <!-- CPU grid pattern -->
-  <line x1="25" y1="22" x2="25" y2="38" stroke="#ecf0f1" stroke-width="0.5"/>
-  <line x1="30" y1="22" x2="30" y2="38" stroke="#ecf0f1" stroke-width="0.5"/>
-  <line x1="35" y1="22" x2="35" y2="38" stroke="#ecf0f1" stroke-width="0.5"/>
-  <line x1="22" y1="25" x2="38" y2="25" stroke="#ecf0f1" stroke-width="0.5"/>
-  <line x1="22" y1="30" x2="38" y2="30" stroke="#ecf0f1" stroke-width="0.5"/>
-  <line x1="22" y1="35" x2="38" y2="35" stroke="#ecf0f1" stroke-width="0.5"/>
+  <!-- Active processing cores -->
+  <rect x="37" y="37" width="4" height="4" fill="#ffffff" opacity="0.9"/>
+  <rect x="51" y="37" width="4" height="4" fill="#ffffff" opacity="0.8"/>
+  <rect x="37" y="51" width="4" height="4" fill="#ffffff" opacity="0.9"/>
+  <rect x="51" y="51" width="4" height="4" fill="#ffffff" opacity="0.7"/>
   
-  <!-- CPU cores -->
-  <rect x="23" y="23" width="4" height="4" fill="#e74c3c" opacity="0.8"/>
-  <rect x="28" y="23" width="4" height="4" fill="#f39c12" opacity="0.8"/>
-  <rect x="33" y="23" width="4" height="4" fill="#2ecc71" opacity="0.8"/>
-  <rect x="23" y="28" width="4" height="4" fill="#9b59b6" opacity="0.8"/>
-  <rect x="28" y="28" width="4" height="4" fill="#1abc9c" opacity="0.8"/>
-  <rect x="33" y="28" width="4" height="4" fill="#e67e22" opacity="0.8"/>
-  <rect x="23" y="33" width="4" height="4" fill="#34495e" opacity="0.8"/>
-  <rect x="28" y="33" width="4" height="4" fill="#95a5a6" opacity="0.8"/>
-  <rect x="33" y="33" width="4" height="4" fill="#8e44ad" opacity="0.8"/>
+  <!-- CPU pins/connectors -->
+  <g fill="#666666">
+    <!-- Top pins -->
+    <rect x="45" y="15" width="2" height="10"/>
+    <rect x="48" y="15" width="2" height="10"/>
+    <rect x="51" y="15" width="2" height="10"/>
+    
+    <!-- Bottom pins -->
+    <rect x="45" y="75" width="2" height="10"/>
+    <rect x="48" y="75" width="2" height="10"/>
+    <rect x="51" y="75" width="2" height="10"/>
+    
+    <!-- Left pins -->
+    <rect x="15" y="45" width="10" height="2"/>
+    <rect x="15" y="48" width="10" height="2"/>
+    <rect x="15" y="51" width="10" height="2"/>
+    
+    <!-- Right pins -->
+    <rect x="75" y="45" width="10" height="2"/>
+    <rect x="75" y="48" width="10" height="2"/>
+    <rect x="75" y="51" width="10" height="2"/>
+  </g>
   
-  <!-- CPU pins -->
-  <rect x="18" y="24" width="2" height="1" fill="#f39c12"/>
-  <rect x="18" y="27" width="2" height="1" fill="#f39c12"/>
-  <rect x="18" y="30" width="2" height="1" fill="#f39c12"/>
-  <rect x="18" y="33" width="2" height="1" fill="#f39c12"/>
-  <rect x="18" y="36" width="2" height="1" fill="#f39c12"/>
+  <!-- Corner tech accents -->
+  <path d="M20,20 L25,20 L25,25" fill="none" stroke="#00ccff" stroke-width="2" opacity="0.6"/>
+  <path d="M80,20 L75,20 L75,25" fill="none" stroke="#00ccff" stroke-width="2" opacity="0.6"/>
+  <path d="M20,80 L25,80 L25,75" fill="none" stroke="#00ccff" stroke-width="2" opacity="0.6"/>
+  <path d="M80,80 L75,80 L75,75" fill="none" stroke="#00ccff" stroke-width="2" opacity="0.6"/>
   
-  <rect x="40" y="24" width="2" height="1" fill="#f39c12"/>
-  <rect x="40" y="27" width="2" height="1" fill="#f39c12"/>
-  <rect x="40" y="30" width="2" height="1" fill="#f39c12"/>
-  <rect x="40" y="33" width="2" height="1" fill="#f39c12"/>
-  <rect x="40" y="36" width="2" height="1" fill="#f39c12"/>
-  
-  <!-- Power icon -->
-  <circle cx="45" cy="15" r="8" fill="#3498db" opacity="0.8"/>
-  <text x="45" y="18" font-family="Arial, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">+</text>
-  
-  <!-- Label -->
-  <text x="30" y="56" font-family="Arial, sans-serif" font-size="9" fill="#1f5582" text-anchor="middle" font-weight="bold">CPU</text>
+  <!-- Performance indicator -->
+  <circle cx="88" cy="12" r="8" fill="#00ff00" opacity="0.8"/>
+  <text x="88" y="16" font-family="Arial" font-size="8" fill="#000000" text-anchor="middle" font-weight="bold">+</text>
 </svg>

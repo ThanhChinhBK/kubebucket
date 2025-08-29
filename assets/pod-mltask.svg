@@ -1,61 +1,72 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="mlGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#8e44ad;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7d3c98;stop-opacity:1" />
+    <linearGradient id="mlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff0088;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#cc0066;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#990044;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="mlBorder" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#e67e22;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#d35400;stop-opacity:1" />
-    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Pod container -->
-  <rect x="8" y="8" width="44" height="44" fill="url(#mlGradient)" stroke="url(#mlBorder)" stroke-width="2" rx="8"/>
+  <!-- Outer hexagon frame -->
+  <polygon points="50,8 75,25 75,55 50,72 25,55 25,25" 
+           fill="none" stroke="#ff0088" stroke-width="2" opacity="0.8"/>
   
-  <!-- Brain shape -->
-  <path d="M 30 16 C 38 16 42 20 42 26 C 42 28 41 30 40 31 C 41 32 42 34 42 36 C 42 40 38 42 32 42 C 28 42 24 40 22 36 C 20 34 20 32 21 30 C 18 29 16 27 16 24 C 16 20 20 16 30 16" 
-        fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1"/>
+  <!-- Neural network brain representation -->
+  <circle cx="50" cy="40" r="20" 
+          fill="url(#mlGrad)" stroke="#ff0088" stroke-width="1.5" filter="url(#glow)"/>
   
-  <!-- Brain divisions -->
-  <path d="M 30 18 C 30 20 29 24 28 28 C 27 32 26 36 28 40" 
-        fill="none" stroke="#95a5a6" stroke-width="1"/>
-  <path d="M 24 22 C 26 24 28 26 30 28 C 32 30 34 32 36 34" 
-        fill="none" stroke="#95a5a6" stroke-width="1"/>
+  <!-- Neural network nodes -->
+  <circle cx="40" cy="30" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="50" cy="25" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="60" cy="30" r="3" fill="#ffffff" opacity="0.9"/>
   
-  <!-- Data input points -->
-  <circle cx="18" cy="24" r="2" fill="#3498db"/>
-  <circle cx="18" cy="30" r="2" fill="#2ecc71"/>
-  <circle cx="18" cy="36" r="2" fill="#f39c12"/>
+  <circle cx="35" cy="40" r="3" fill="#ffffff" opacity="0.8"/>
+  <circle cx="50" cy="40" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="65" cy="40" r="3" fill="#ffffff" opacity="0.8"/>
   
-  <!-- Data flow lines -->
-  <line x1="20" y1="24" x2="26" y2="26" stroke="#3498db" stroke-width="2" opacity="0.8"/>
-  <line x1="20" y1="30" x2="28" y2="30" stroke="#2ecc71" stroke-width="2" opacity="0.8"/>
-  <line x1="20" y1="36" x2="26" y2="34" stroke="#f39c12" stroke-width="2" opacity="0.8"/>
+  <circle cx="40" cy="50" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="50" cy="55" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="60" cy="50" r="3" fill="#ffffff" opacity="0.9"/>
   
-  <!-- Processing indicators in brain -->
-  <circle cx="26" cy="24" r="1.5" fill="#e74c3c"/>
-  <circle cx="30" cy="26" r="1.5" fill="#9b59b6"/>
-  <circle cx="34" cy="28" r="1.5" fill="#1abc9c"/>
-  <circle cx="28" cy="32" r="1.5" fill="#e67e22"/>
-  <circle cx="32" cy="34" r="1.5" fill="#2ecc71"/>
+  <!-- Neural connections -->
+  <g stroke="#00ffcc" stroke-width="1.5" opacity="0.7">
+    <line x1="40" y1="30" x2="35" y2="40"/>
+    <line x1="40" y1="30" x2="50" y2="40"/>
+    <line x1="50" y1="25" x2="50" y2="40"/>
+    <line x1="60" y1="30" x2="65" y2="40"/>
+    <line x1="60" y1="30" x2="50" y2="40"/>
+    
+    <line x1="35" y1="40" x2="40" y2="50"/>
+    <line x1="50" y1="40" x2="40" y2="50"/>
+    <line x1="50" y1="40" x2="50" y2="55"/>
+    <line x1="50" y1="40" x2="60" y2="50"/>
+    <line x1="65" y1="40" x2="60" y2="50"/>
+  </g>
   
-  <!-- Output -->
-  <circle cx="42" cy="28" r="2" fill="#e74c3c"/>
-  <line x1="38" y1="28" x2="40" y2="28" stroke="#e74c3c" stroke-width="2"/>
+  <!-- AI processing indicator -->
+  <path d="M45,75 L40,85 L47,85 L42,95 L48,85 L43,85 Z" 
+        fill="#ff0088" stroke="#ffffff" stroke-width="1" opacity="0.8"/>
   
-  <!-- Data symbols around brain -->
-  <text x="14" y="20" font-family="Arial, sans-serif" font-size="6" fill="#3498db" font-weight="bold">01</text>
-  <text x="14" y="26" font-family="Arial, sans-serif" font-size="6" fill="#2ecc71" font-weight="bold">10</text>
-  <text x="14" y="32" font-family="Arial, sans-serif" font-size="6" fill="#f39c12" font-weight="bold">11</text>
-  <text x="14" y="38" font-family="Arial, sans-serif" font-size="6" fill="#e74c3c" font-weight="bold">AI</text>
+  <!-- Data input/output ports -->
+  <rect x="18" y="37" width="7" height="6" fill="#666666"/>
+  <rect x="75" y="37" width="7" height="6" fill="#666666"/>
   
-  <!-- Result indicator -->
-  <text x="44" y="24" font-family="Arial, sans-serif" font-size="6" fill="#e74c3c" font-weight="bold">ML</text>
+  <!-- Processing waves -->
+  <g stroke="#ff0088" stroke-width="1" fill="none" opacity="0.6">
+    <circle cx="50" cy="40" r="25"/>
+    <circle cx="50" cy="40" r="30"/>
+  </g>
   
-  <!-- Highlight -->
-  <rect x="12" y="12" width="36" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
-  
-  <!-- Label -->
-  <text x="30" y="48" font-family="Arial, sans-serif" font-size="7" fill="#fff" text-anchor="middle" font-weight="bold">ML TASK</text>
+  <!-- Corner tech accents -->
+  <path d="M30,15 L35,15 L35,20" fill="none" stroke="#ff0088" stroke-width="2" opacity="0.6"/>
+  <path d="M70,15 L65,15 L65,20" fill="none" stroke="#ff0088" stroke-width="2" opacity="0.6"/>
+  <path d="M30,65 L35,65 L35,60" fill="none" stroke="#ff0088" stroke-width="2" opacity="0.6"/>
+  <path d="M70,65 L65,65 L65,60" fill="none" stroke="#ff0088" stroke-width="2" opacity="0.6"/>
 </svg>

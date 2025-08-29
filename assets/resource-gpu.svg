@@ -1,70 +1,114 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="gpuGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7d3c98;stop-opacity:1" />
+    <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff4400;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#cc3300;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#992200;stop-opacity:1" />
     </linearGradient>
-    <radialGradient id="gpuGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
-    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Resource crystal shape -->
-  <polygon points="30,8 45,22 45,38 30,52 15,38 15,22" 
-           fill="url(#gpuGradient)" stroke="#6c3483" stroke-width="2"/>
+  <!-- Outer rectangular frame -->
+  <rect x="10" y="25" width="80" height="50" 
+        fill="none" stroke="#ff4400" stroke-width="2" opacity="0.8"/>
   
-  <!-- Inner glow -->
-  <polygon points="30,12 41,24 41,36 30,48 19,36 19,24" 
-           fill="url(#gpuGlow)"/>
+  <!-- GPU card body -->
+  <rect x="15" y="30" width="70" height="40" rx="3" 
+        fill="url(#gpuGrad)" stroke="#ff4400" stroke-width="1.5" filter="url(#glow)"/>
   
-  <!-- GPU Graphics Card -->
-  <rect x="18" y="20" width="24" height="20" fill="#2c3e50" stroke="#34495e" stroke-width="1" rx="2"/>
+  <!-- Graphics processing unit -->
+  <rect x="25" y="35" width="20" height="20" rx="2" fill="#000000" stroke="#333333" stroke-width="1"/>
   
-  <!-- Screen/Display representation -->
-  <rect x="20" y="22" width="20" height="12" fill="#1a1a1a" stroke="#34495e" stroke-width="1" rx="1"/>
+  <!-- GPU die with grid pattern -->
+  <g stroke="#444444" stroke-width="0.5" opacity="0.8">
+    <line x1="28" y1="37" x2="28" y2="53"/>
+    <line x1="32" y1="37" x2="32" y2="53"/>
+    <line x1="36" y1="37" x2="36" y2="53"/>
+    <line x1="40" y1="37" x2="40" y2="53"/>
+    <line x1="42" y1="37" x2="42" y2="53"/>
+    
+    <line x1="27" y1="40" x2="43" y2="40"/>
+    <line x1="27" y1="44" x2="43" y2="44"/>
+    <line x1="27" y1="48" x2="43" y2="48"/>
+    <line x1="27" y1="52" x2="43" y2="52"/>
+  </g>
   
-  <!-- Pixel grid pattern (representing graphics) -->
-  <rect x="22" y="24" width="2" height="2" fill="#e74c3c"/>
-  <rect x="25" y="24" width="2" height="2" fill="#f39c12"/>
-  <rect x="28" y="24" width="2" height="2" fill="#2ecc71"/>
-  <rect x="31" y="24" width="2" height="2" fill="#3498db"/>
-  <rect x="34" y="24" width="2" height="2" fill="#9b59b6"/>
-  <rect x="37" y="24" width="2" height="2" fill="#e67e22"/>
+  <!-- VRAM chips -->
+  <rect x="50" y="35" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="60" y="35" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="70" y="35" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
   
-  <rect x="22" y="27" width="2" height="2" fill="#1abc9c"/>
-  <rect x="25" y="27" width="2" height="2" fill="#e74c3c"/>
-  <rect x="28" y="27" width="2" height="2" fill="#f39c12"/>
-  <rect x="31" y="27" width="2" height="2" fill="#2ecc71"/>
-  <rect x="34" y="27" width="2" height="2" fill="#3498db"/>
-  <rect x="37" y="27" width="2" height="2" fill="#9b59b6"/>
+  <rect x="50" y="55" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="60" y="55" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="70" y="55" width="8" height="12" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
   
-  <rect x="22" y="30" width="2" height="2" fill="#95a5a6"/>
-  <rect x="25" y="30" width="2" height="2" fill="#34495e"/>
-  <rect x="28" y="30" width="2" height="2" fill="#e74c3c"/>
-  <rect x="31" y="30" width="2" height="2" fill="#f39c12"/>
-  <rect x="34" y="30" width="2" height="2" fill="#2ecc71"/>
-  <rect x="37" y="30" width="2" height="2" fill="#3498db"/>
+  <!-- VRAM indicators -->
+  <g fill="#ffffff" opacity="0.9">
+    <rect x="52" y="37" width="4" height="1"/>
+    <rect x="52" y="40" width="4" height="1"/>
+    <rect x="52" y="43" width="4" height="1"/>
+    
+    <rect x="62" y="37" width="4" height="1"/>
+    <rect x="62" y="40" width="4" height="1"/>
+    <rect x="62" y="43" width="4" height="1"/>
+    
+    <rect x="72" y="37" width="4" height="1"/>
+    <rect x="72" y="40" width="4" height="1"/>
+    <rect x="72" y="43" width="4" height="1"/>
+    
+    <rect x="52" y="57" width="4" height="1"/>
+    <rect x="52" y="60" width="4" height="1"/>
+    <rect x="52" y="63" width="4" height="1"/>
+    
+    <rect x="62" y="57" width="4" height="1"/>
+    <rect x="62" y="60" width="4" height="1"/>
+    <rect x="62" y="63" width="4" height="1"/>
+    
+    <rect x="72" y="57" width="4" height="1"/>
+    <rect x="72" y="60" width="4" height="1"/>
+    <rect x="72" y="63" width="4" height="1"/>
+  </g>
+  
+  <!-- Active processing cores -->
+  <rect x="29" y="38" width="3" height="3" fill="#ffff00" opacity="0.9"/>
+  <rect x="33" y="41" width="3" height="3" fill="#ffff00" opacity="0.8"/>
+  <rect x="37" y="45" width="3" height="3" fill="#ffff00" opacity="0.9"/>
+  <rect x="29" y="49" width="3" height="3" fill="#ffff00" opacity="0.7"/>
   
   <!-- Power connectors -->
-  <rect x="16" y="24" width="2" height="3" fill="#f39c12"/>
-  <rect x="16" y="28" width="2" height="3" fill="#f39c12"/>
-  <rect x="16" y="32" width="2" height="3" fill="#f39c12"/>
+  <rect x="10" y="42" width="5" height="8" fill="#ffd700"/>
+  <rect x="10" y="52" width="5" height="8" fill="#ffd700"/>
+  
+  <!-- Display outputs -->
+  <rect x="85" y="40" width="5" height="4" fill="#666666"/>
+  <rect x="85" y="46" width="5" height="4" fill="#666666"/>
+  <rect x="85" y="52" width="5" height="4" fill="#666666"/>
   
   <!-- Cooling fans -->
-  <circle cx="22" cy="37" r="2" fill="#95a5a6" stroke="#7f8c8d" stroke-width="0.5"/>
-  <circle cx="30" cy="37" r="2" fill="#95a5a6" stroke="#7f8c8d" stroke-width="0.5"/>
-  <circle cx="38" cy="37" r="2" fill="#95a5a6" stroke="#7f8c8d" stroke-width="0.5"/>
+  <circle cx="25" cy="58" r="5" fill="#333333" stroke="#ff4400" stroke-width="1" opacity="0.8"/>
+  <circle cx="45" cy="58" r="5" fill="#333333" stroke="#ff4400" stroke-width="1" opacity="0.8"/>
   
   <!-- Fan blades -->
-  <path d="M 22 35 L 24 37 L 22 39 L 20 37 Z" fill="#ecf0f1"/>
-  <path d="M 30 35 L 32 37 L 30 39 L 28 37 Z" fill="#ecf0f1"/>
-  <path d="M 38 35 L 40 37 L 38 39 L 36 37 Z" fill="#ecf0f1"/>
+  <g stroke="#ff4400" stroke-width="2" opacity="0.7">
+    <line x1="22" y1="55" x2="28" y2="61"/>
+    <line x1="28" y1="55" x2="22" y2="61"/>
+    <line x1="42" y1="55" x2="48" y2="61"/>
+    <line x1="48" y1="55" x2="42" y2="61"/>
+  </g>
   
-  <!-- Power icon -->
-  <circle cx="45" cy="15" r="8" fill="#9b59b6" opacity="0.8"/>
-  <text x="45" y="18" font-family="Arial, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">+</text>
+  <!-- Corner tech accents -->
+  <path d="M15,20 L20,20 L20,25" fill="none" stroke="#ff4400" stroke-width="2" opacity="0.6"/>
+  <path d="M85,20 L80,20 L80,25" fill="none" stroke="#ff4400" stroke-width="2" opacity="0.6"/>
+  <path d="M15,80 L20,80 L20,75" fill="none" stroke="#ff4400" stroke-width="2" opacity="0.6"/>
+  <path d="M85,80 L80,80 L80,75" fill="none" stroke="#ff4400" stroke-width="2" opacity="0.6"/>
   
-  <!-- Label -->
-  <text x="30" y="56" font-family="Arial, sans-serif" font-size="9" fill="#6c3483" text-anchor="middle" font-weight="bold">GPU</text>
+  <!-- Performance indicator -->
+  <circle cx="88" cy="12" r="8" fill="#00ff00" opacity="0.8"/>
+  <text x="88" y="16" font-family="Arial" font-size="8" fill="#000000" text-anchor="middle" font-weight="bold">+</text>
 </svg>

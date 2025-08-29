@@ -1,31 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="backendGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6600;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#cc5500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#994400;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="backendBorder" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e67e22;stop-opacity:1" />
-    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Pod container -->
-  <rect x="8" y="8" width="44" height="44" fill="url(#backendGradient)" stroke="url(#backendBorder)" stroke-width="2" rx="8"/>
+  <!-- Outer octagonal frame -->
+  <polygon points="50,5 75,15 90,40 90,60 75,85 50,95 25,85 10,60 10,40 25,15" 
+           fill="none" stroke="#ff6600" stroke-width="2" opacity="0.8"/>
   
-  <!-- Server icon -->
-  <rect x="18" y="16" width="24" height="4" fill="#ecf0f1" rx="2"/>
-  <rect x="18" y="24" width="24" height="4" fill="#ecf0f1" rx="2"/>
-  <rect x="18" y="32" width="24" height="4" fill="#ecf0f1" rx="2"/>
+  <!-- Server rack representation -->
+  <rect x="25" y="20" width="50" height="60" rx="2" 
+        fill="url(#backendGrad)" stroke="#ff6600" stroke-width="1.5" filter="url(#glow)"/>
   
-  <!-- Status indicators -->
-  <circle cx="20" cy="18" r="1.5" fill="#2ecc71"/>
-  <circle cx="20" cy="26" r="1.5" fill="#2ecc71"/>
-  <circle cx="20" cy="34" r="1.5" fill="#2ecc71"/>
+  <!-- Server slots/layers -->
+  <rect x="30" y="25" width="40" height="8" fill="#000000" opacity="0.6" rx="1"/>
+  <rect x="30" y="36" width="40" height="8" fill="#000000" opacity="0.6" rx="1"/>
+  <rect x="30" y="47" width="40" height="8" fill="#000000" opacity="0.6" rx="1"/>
+  <rect x="30" y="58" width="40" height="8" fill="#000000" opacity="0.6" rx="1"/>
+  <rect x="30" y="69" width="40" height="8" fill="#000000" opacity="0.6" rx="1"/>
   
-  <!-- Highlight -->
-  <rect x="12" y="12" width="36" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+  <!-- Status LEDs -->
+  <circle cx="65" cy="29" r="1.5" fill="#00ff00" opacity="0.9"/>
+  <circle cx="65" cy="40" r="1.5" fill="#00ff00" opacity="0.9"/>
+  <circle cx="65" cy="51" r="1.5" fill="#ffff00" opacity="0.9"/>
+  <circle cx="65" cy="62" r="1.5" fill="#00ff00" opacity="0.9"/>
+  <circle cx="65" cy="73" r="1.5" fill="#00ff00" opacity="0.9"/>
   
-  <!-- Label -->
-  <text x="30" y="46" font-family="Arial, sans-serif" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">BE</text>
+  <!-- Connection ports -->
+  <rect x="33" y="29" width="4" height="1" fill="#00ffff" opacity="0.8"/>
+  <rect x="33" y="40" width="4" height="1" fill="#00ffff" opacity="0.8"/>
+  <rect x="33" y="51" width="4" height="1" fill="#00ffff" opacity="0.8"/>
+  
+  <!-- Corner tech accents -->
+  <path d="M20,15 L25,15 L25,20" fill="none" stroke="#ff6600" stroke-width="2" opacity="0.6"/>
+  <path d="M80,15 L75,15 L75,20" fill="none" stroke="#ff6600" stroke-width="2" opacity="0.6"/>
 </svg>

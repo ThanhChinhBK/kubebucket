@@ -1,35 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="dbGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1" />
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff66;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#00cc55;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#009944;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="dbBorder" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#e67e22;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#d35400;stop-opacity:1" />
-    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Pod container -->
-  <rect x="8" y="8" width="44" height="44" fill="url(#dbGradient)" stroke="url(#dbBorder)" stroke-width="2" rx="8"/>
+  <!-- Outer circular frame -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="#00ff66" stroke-width="2" opacity="0.8"/>
   
-  <!-- Database cylinders -->
-  <ellipse cx="30" cy="20" rx="12" ry="4" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1"/>
-  <rect x="18" y="20" width="24" height="8" fill="#ecf0f1"/>
-  <ellipse cx="30" cy="28" rx="12" ry="4" fill="#bdc3c7" stroke="#95a5a6" stroke-width="1"/>
+  <!-- Database cylinder stack -->
+  <!-- Top cylinder -->
+  <ellipse cx="50" cy="25" rx="20" ry="6" fill="url(#dbGrad)" stroke="#00ff66" stroke-width="1.5" filter="url(#glow)"/>
+  <rect x="30" y="25" width="40" height="15" fill="url(#dbGrad)"/>
+  <ellipse cx="50" cy="40" rx="20" ry="6" fill="none" stroke="#00ff66" stroke-width="1.5"/>
   
-  <ellipse cx="30" cy="30" rx="10" ry="3" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1"/>
-  <rect x="20" y="30" width="20" height="6" fill="#ecf0f1"/>
-  <ellipse cx="30" cy="36" rx="10" ry="3" fill="#bdc3c7" stroke="#95a5a6" stroke-width="1"/>
+  <!-- Middle cylinder -->
+  <ellipse cx="50" cy="45" rx="20" ry="6" fill="url(#dbGrad)" stroke="#00ff66" stroke-width="1.5"/>
+  <rect x="30" y="45" width="40" height="15" fill="url(#dbGrad)"/>
+  <ellipse cx="50" cy="60" rx="20" ry="6" fill="none" stroke="#00ff66" stroke-width="1.5"/>
   
-  <!-- Data indicators -->
-  <rect x="24" y="22" width="12" height="1" fill="#3498db" rx="0.5"/>
-  <rect x="24" y="24" width="8" height="1" fill="#2ecc71" rx="0.5"/>
-  <rect x="24" y="32" width="10" height="1" fill="#3498db" rx="0.5"/>
+  <!-- Bottom cylinder -->
+  <ellipse cx="50" cy="65" rx="20" ry="6" fill="url(#dbGrad)" stroke="#00ff66" stroke-width="1.5"/>
+  <rect x="30" y="65" width="40" height="10" fill="url(#dbGrad)"/>
+  <ellipse cx="50" cy="75" rx="20" ry="6" fill="url(#dbGrad)" stroke="#00ff66" stroke-width="1.5"/>
   
-  <!-- Highlight -->
-  <rect x="12" y="12" width="36" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+  <!-- Data indicators (lines representing data) -->
+  <rect x="35" y="30" width="12" height="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="35" y="33" width="8" height="1" fill="#ffffff" opacity="0.6"/>
+  <rect x="35" y="36" width="15" height="1" fill="#ffffff" opacity="0.8"/>
   
-  <!-- Label -->
-  <text x="30" y="46" font-family="Arial, sans-serif" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">DB</text>
+  <rect x="35" y="50" width="10" height="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="35" y="53" width="14" height="1" fill="#ffffff" opacity="0.6"/>
+  <rect x="35" y="56" width="9" height="1" fill="#ffffff" opacity="0.8"/>
+  
+  <rect x="35" y="70" width="13" height="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="35" y="72" width="7" height="1" fill="#ffffff" opacity="0.6"/>
+  
+  <!-- Connection points -->
+  <circle cx="25" cy="50" r="2" fill="#00ffff" opacity="0.8"/>
+  <circle cx="75" cy="50" r="2" fill="#00ffff" opacity="0.8"/>
+  
+  <!-- Corner tech details -->
+  <path d="M15,15 L20,15 L20,20" fill="none" stroke="#00ff66" stroke-width="1.5" opacity="0.6"/>
+  <path d="M85,15 L80,15 L80,20" fill="none" stroke="#00ff66" stroke-width="1.5" opacity="0.6"/>
 </svg>

@@ -1,41 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="monitorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1" />
+    <linearGradient id="monitorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9944ff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6633cc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#442299;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="monitorBorder" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
-    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Pod container -->
-  <rect x="8" y="8" width="44" height="44" fill="url(#monitorGradient)" stroke="url(#monitorBorder)" stroke-width="2" rx="8"/>
+  <!-- Outer pentagon frame -->
+  <polygon points="50,10 80,30 80,70 50,90 20,70 20,30" 
+           fill="none" stroke="#9944ff" stroke-width="2" opacity="0.8"/>
   
   <!-- Monitor screen -->
-  <rect x="14" y="16" width="32" height="20" fill="#2c3e50" stroke="#34495e" stroke-width="1" rx="2"/>
+  <rect x="30" y="25" width="40" height="30" rx="3" 
+        fill="url(#monitorGrad)" stroke="#9944ff" stroke-width="1.5" filter="url(#glow)"/>
   
-  <!-- Chart/graph lines -->
-  <polyline points="16,32 20,28 24,30 28,24 32,26 36,22 40,24 44,20" 
-            fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round"/>
-  <polyline points="16,34 20,30 24,32 28,28 32,30 36,26 40,28 44,24" 
-            fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
-  <polyline points="16,36 20,34 24,36 28,32 32,34 36,30 40,32 44,28" 
-            fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round"/>
+  <!-- Screen bezel -->
+  <rect x="32" y="27" width="36" height="26" rx="2" 
+        fill="#000000" stroke="#333333" stroke-width="1"/>
+  
+  <!-- Active screen display -->
+  <rect x="34" y="29" width="32" height="22" fill="#001122" rx="1"/>
+  
+  <!-- Chart/graph lines (monitoring data) -->
+  <polyline points="36,40 40,35 44,42 48,33 52,38 56,30 60,45 64,35" 
+            fill="none" stroke="#00ff99" stroke-width="1.5" opacity="0.8"/>
+  <polyline points="36,45 40,42 44,48 48,40 52,44 56,37 60,50 64,42" 
+            fill="none" stroke="#ff0099" stroke-width="1.5" opacity="0.6"/>
   
   <!-- Status indicators -->
-  <circle cx="17" cy="19" r="1.5" fill="#2ecc71"/>
-  <circle cx="21" cy="19" r="1.5" fill="#f39c12"/>
-  <circle cx="25" cy="19" r="1.5" fill="#e74c3c"/>
+  <circle cx="37" cy="31" r="1" fill="#00ff00"/>
+  <circle cx="40" cy="31" r="1" fill="#ffff00"/>
+  <circle cx="43" cy="31" r="1" fill="#ff0000"/>
   
-  <!-- Alert icon -->
-  <circle cx="40" cy="40" r="6" fill="#e74c3c" opacity="0.8"/>
-  <text x="40" y="43" font-family="Arial, sans-serif" font-size="8" fill="#fff" text-anchor="middle" font-weight="bold">!</text>
+  <!-- Monitor base/stand -->
+  <rect x="47" y="55" width="6" height="8" fill="#333333"/>
+  <rect x="42" y="63" width="16" height="3" fill="#333333"/>
   
-  <!-- Highlight -->
-  <rect x="12" y="12" width="36" height="2" fill="rgba(255,255,255,0.3)" rx="1"/>
+  <!-- Data flow indicators -->
+  <circle cx="25" cy="40" r="2" fill="#9944ff" opacity="0.7"/>
+  <circle cx="75" cy="40" r="2" fill="#9944ff" opacity="0.7"/>
   
-  <!-- Label -->
-  <text x="30" y="47" font-family="Arial, sans-serif" font-size="7" fill="#fff" text-anchor="middle" font-weight="bold">MON</text>
+  <!-- Corner tech accents -->
+  <path d="M25,25 L30,25 L30,30" fill="none" stroke="#9944ff" stroke-width="2" opacity="0.6"/>
+  <path d="M75,25 L70,25 L70,30" fill="none" stroke="#9944ff" stroke-width="2" opacity="0.6"/>
+  <path d="M25,55 L30,55 L30,50" fill="none" stroke="#9944ff" stroke-width="2" opacity="0.6"/>
+  <path d="M75,55 L70,55 L70,50" fill="none" stroke="#9944ff" stroke-width="2" opacity="0.6"/>
 </svg>

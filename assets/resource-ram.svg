@@ -1,51 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="ramGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#16a085;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#138d75;stop-opacity:1" />
+    <linearGradient id="ramGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#00cc66;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#009944;stop-opacity:1" />
     </linearGradient>
-    <radialGradient id="ramGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
-    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Resource crystal shape -->
-  <polygon points="30,8 45,22 45,38 30,52 15,38 15,22" 
-           fill="url(#ramGradient)" stroke="#0e6b5d" stroke-width="2"/>
+  <!-- Outer rectangular frame -->
+  <rect x="20" y="25" width="60" height="50" 
+        fill="none" stroke="#00ff88" stroke-width="2" opacity="0.8"/>
   
-  <!-- Inner glow -->
-  <polygon points="30,12 41,24 41,36 30,48 19,36 19,24" 
-           fill="url(#ramGlow)"/>
-  
-  <!-- RAM stick representation -->
-  <rect x="20" y="24" width="20" height="12" fill="#2c3e50" stroke="#34495e" stroke-width="1" rx="1"/>
+  <!-- RAM stick body -->
+  <rect x="25" y="30" width="50" height="40" rx="3" 
+        fill="url(#ramGrad)" stroke="#00ff88" stroke-width="1.5" filter="url(#glow)"/>
   
   <!-- Memory chips -->
-  <rect x="22" y="26" width="4" height="8" fill="#ecf0f1" rx="0.5"/>
-  <rect x="28" y="26" width="4" height="8" fill="#ecf0f1" rx="0.5"/>
-  <rect x="34" y="26" width="4" height="8" fill="#ecf0f1" rx="0.5"/>
+  <rect x="30" y="35" width="8" height="30" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="41" y="35" width="8" height="30" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="52" y="35" width="8" height="30" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
+  <rect x="63" y="35" width="8" height="30" rx="1" fill="#000000" stroke="#333333" stroke-width="1"/>
   
-  <!-- Connectors -->
-  <rect x="21" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="23" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="25" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="27" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="29" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="31" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="33" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="35" y="35" width="1" height="2" fill="#f39c12"/>
-  <rect x="37" y="35" width="1" height="2" fill="#f39c12"/>
+  <!-- Memory cell indicators -->
+  <g fill="#ffffff" opacity="0.9">
+    <rect x="32" y="38" width="4" height="2"/>
+    <rect x="32" y="42" width="4" height="2"/>
+    <rect x="32" y="46" width="4" height="2"/>
+    <rect x="32" y="50" width="4" height="2"/>
+    <rect x="32" y="54" width="4" height="2"/>
+    <rect x="32" y="58" width="4" height="2"/>
+    
+    <rect x="43" y="38" width="4" height="2"/>
+    <rect x="43" y="42" width="4" height="2"/>
+    <rect x="43" y="46" width="4" height="2"/>
+    <rect x="43" y="50" width="4" height="2"/>
+    <rect x="43" y="54" width="4" height="2"/>
+    <rect x="43" y="58" width="4" height="2"/>
+    
+    <rect x="54" y="38" width="4" height="2"/>
+    <rect x="54" y="42" width="4" height="2"/>
+    <rect x="54" y="46" width="4" height="2"/>
+    <rect x="54" y="50" width="4" height="2"/>
+    <rect x="54" y="54" width="4" height="2"/>
+    <rect x="54" y="58" width="4" height="2"/>
+    
+    <rect x="65" y="38" width="4" height="2"/>
+    <rect x="65" y="42" width="4" height="2"/>
+    <rect x="65" y="46" width="4" height="2"/>
+    <rect x="65" y="50" width="4" height="2"/>
+    <rect x="65" y="54" width="4" height="2"/>
+    <rect x="65" y="58" width="4" height="2"/>
+  </g>
   
-  <!-- Activity indicators -->
-  <circle cx="24" cy="28" r="1" fill="#2ecc71"/>
-  <circle cx="30" cy="30" r="1" fill="#f39c12"/>
-  <circle cx="36" cy="32" r="1" fill="#e74c3c"/>
+  <!-- Gold finger connectors -->
+  <g fill="#ffd700">
+    <rect x="26" y="70" width="2" height="5"/>
+    <rect x="30" y="70" width="2" height="5"/>
+    <rect x="34" y="70" width="2" height="5"/>
+    <rect x="38" y="70" width="2" height="5"/>
+    <rect x="42" y="70" width="2" height="5"/>
+    <rect x="46" y="70" width="2" height="5"/>
+    <rect x="50" y="70" width="2" height="5"/>
+    <rect x="54" y="70" width="2" height="5"/>
+    <rect x="58" y="70" width="2" height="5"/>
+    <rect x="62" y="70" width="2" height="5"/>
+    <rect x="66" y="70" width="2" height="5"/>
+    <rect x="70" y="70" width="2" height="5"/>
+  </g>
   
-  <!-- Power icon -->
-  <circle cx="45" cy="15" r="8" fill="#2ecc71" opacity="0.8"/>
-  <text x="45" y="18" font-family="Arial, sans-serif" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">+</text>
+  <!-- Active memory indicators -->
+  <circle cx="34" cy="40" r="1.5" fill="#00ffff" opacity="0.9"/>
+  <circle cx="45" cy="44" r="1.5" fill="#00ffff" opacity="0.8"/>
+  <circle cx="56" cy="48" r="1.5" fill="#00ffff" opacity="0.9"/>
+  <circle cx="67" cy="52" r="1.5" fill="#00ffff" opacity="0.7"/>
   
-  <!-- Label -->
-  <text x="30" y="56" font-family="Arial, sans-serif" font-size="9" fill="#0e6b5d" text-anchor="middle" font-weight="bold">RAM</text>
+  <!-- Corner tech accents -->
+  <path d="M25,25 L30,25 L30,30" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.6"/>
+  <path d="M75,25 L70,25 L70,30" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.6"/>
+  <path d="M25,75 L30,75 L30,70" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.6"/>
+  <path d="M75,75 L70,75 L70,70" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Performance indicator -->
+  <circle cx="88" cy="12" r="8" fill="#00ff00" opacity="0.8"/>
+  <text x="88" y="16" font-family="Arial" font-size="8" fill="#000000" text-anchor="middle" font-weight="bold">+</text>
 </svg>
