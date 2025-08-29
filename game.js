@@ -273,9 +273,9 @@ class KubeTetris {
     generateRandomNodeCapacity() {
         const capacityRanges = {
             cpu: [4, 8, 16, 32, 48, 64],          // 4 to 64 cores
-            ram: [16, 32, 64, 96, 128],           // 16GB to 128GB
+            ram: [32, 64, 96, 128, 128],           // 16GB to 128GB
             ssd: [128, 256, 512, 1024, 2048],     // 128GB to 2TB (in GB)
-            gpu: [0, 0, 0, 4, 8, 16, 24, 32, 48]  // 0 to 48GB GPU (more chance for 0)
+            gpu: [0, 4, 8, 16, 24, 32, 48]  // 0 to 48GB GPU (more chance for 0)
         };
         
         const generated = {
@@ -385,7 +385,7 @@ class KubeTetris {
                 color: '#f39c12',
                 resourceRanges: { 
                     cpu: [0.5, 1, 2], 
-                    ram: [8, 16, 32, 32, 64, 64], 
+                    ram: [8, 16, 16, 32, 32], 
                     ssd: [20, 50, 100], 
                     gpu: [0] 
                 },
