@@ -42,10 +42,19 @@ class KubeTetris {
         this.isInstantDropping = false; // For smooth instant drop
         this.instantDropSpeed = 0.1; // Speed of instant drop animation
         
-        // Landing animation properties
+        // Performance optimization: Reduce animation arrays and add dirty region tracking
         this.landingAnimations = [];
         this.landingEffects = [];
         this.bucketShakeAnimations = [];
+        
+        // Performance optimizations
+        this.isDirty = true; // Track if canvas needs redrawing
+        this.animationFrameThrottle = 0; // Throttle animations to 30fps instead of 60fps
+        this.cachedGradients = new Map(); // Cache gradients to avoid recreation
+        this.particlePool = []; // Object pool for particles
+        this.maxParticles = 50; // Limit total particles for performance
+        this.cachedGlowIntensity = 0; // Cache glow calculations
+        this.lastGlowUpdate = 0; // Track last glow update time
         
         // Kubernetes constraints
         this.activeConstraints = [];
@@ -79,13 +88,15 @@ class KubeTetris {
         });
     }
     
-    // Cache management and version checking
-    checkAndClearCache() {
+    // Unified cache management
+    manageCaches(forceReload = false) {
         const storedVersion = localStorage.getItem('kubetetris_version');
+        const isVersionUpdate = storedVersion !== this.gameVersion;
         
-        // If version has changed or doesn't exist, clear relevant caches
-        if (storedVersion !== this.gameVersion) {
-            console.log(`KubeTetris version updated: ${storedVersion} → ${this.gameVersion}`);
+        if (isVersionUpdate || forceReload) {
+            if (isVersionUpdate) {
+                console.log(`KubeTetris version updated: ${storedVersion} → ${this.gameVersion}`);
+            }
             
             // Clear localStorage except for high scores
             const highScores = localStorage.getItem('kubetetris_highscores');
@@ -97,54 +108,40 @@ class KubeTetris {
             // Clear sessionStorage
             sessionStorage.clear();
             
-            // Try to clear browser cache programmatically
+            // Clear browser caches
             if ('caches' in window) {
                 caches.keys().then(cacheNames => {
                     cacheNames.forEach(cacheName => {
-                        if (cacheName.includes('kubetetris') || cacheName.includes('game')) {
+                        if (!forceReload && (cacheName.includes('kubetetris') || cacheName.includes('game'))) {
+                            caches.delete(cacheName);
+                        } else if (forceReload) {
                             caches.delete(cacheName);
                         }
                     });
                 });
             }
             
-            // Store new version
-            localStorage.setItem('kubetetris_version', this.gameVersion);
+            // Store new version for version updates
+            if (isVersionUpdate) {
+                localStorage.setItem('kubetetris_version', this.gameVersion);
+                console.log('Game caches cleared for new version');
+            }
             
-            console.log('Game caches cleared for new version');
+            // Force reload if requested
+            if (forceReload) {
+                setTimeout(() => window.location.reload(true), 500);
+            }
         }
     }
     
-    // Manual cache clearing method (can be called from console)
+    // Version checking - calls unified cache management
+    checkAndClearCache() {
+        this.manageCaches(false);
+    }
+    
+    // Manual cache clearing - calls unified cache management with reload
     forceClearCache() {
-        console.log('Manually clearing all caches...');
-        
-        // Clear localStorage except for high scores
-        const highScores = localStorage.getItem('kubetetris_highscores');
-        localStorage.clear();
-        if (highScores) {
-            localStorage.setItem('kubetetris_highscores', highScores);
-        }
-        
-        // Clear sessionStorage
-        sessionStorage.clear();
-        
-        // Clear service worker caches
-        if ('caches' in window) {
-            caches.keys().then(cacheNames => {
-                cacheNames.forEach(cacheName => {
-                    caches.delete(cacheName);
-                    console.log(`Cleared cache: ${cacheName}`);
-                });
-            });
-        }
-        
-        // Force page reload to ensure fresh assets
-        setTimeout(() => {
-            window.location.reload(true);
-        }, 500);
-        
-        console.log('Cache cleared! Page will reload...');
+        this.manageCaches(true);
     }
 
     resizeCanvas() {
@@ -582,15 +579,6 @@ class KubeTetris {
         const instantDropBtn = document.getElementById('instant-drop-btn');
         const resetBtn = document.getElementById('reset-btn');
         
-        // Debug: Check if elements exist
-        console.log('Mobile buttons found:', {
-            moveLeftBtn: !!moveLeftBtn,
-            moveRightBtn: !!moveRightBtn,
-            startDropBtn: !!startDropBtn,
-            instantDropBtn: !!instantDropBtn,
-            resetBtn: !!resetBtn
-        });
-        
         // Mobile haptic feedback helper
         const hapticFeedback = (intensity = 'medium') => {
             // Only attempt vibration on mobile devices, after user interaction, and if vibration is supported
@@ -623,11 +611,8 @@ class KubeTetris {
         // Enhanced button interaction with feedback
         const setupButton = (button, action, feedbackIntensity = 'medium') => {
             if (!button) {
-                console.warn('Button not found for setup');
                 return;
             }
-            
-            console.log('Setting up button:', button.id);
             
             let isPressed = false;
             let lastActionTime = 0;
@@ -637,7 +622,6 @@ class KubeTetris {
                 const now = Date.now();
                 // Use shared cooldown for movement actions
                 if (button.id.includes('move') && now - this.lastMoveActionTime < 100) {
-                    console.log('Button action blocked - shared cooldown active');
                     return;
                 }
                 action();
@@ -647,7 +631,6 @@ class KubeTetris {
             if ('ontouchstart' in window) {
                 // Mobile/touch device
                 button.addEventListener('touchstart', (e) => {
-                    console.log('Touch start on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     isPressed = true;
@@ -656,7 +639,6 @@ class KubeTetris {
                 }, { passive: false });
                 
                 button.addEventListener('touchend', (e) => {
-                    console.log('Touch end on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     if (isPressed) {
@@ -702,7 +684,6 @@ class KubeTetris {
                 
                 // Click as backup for desktop
                 button.addEventListener('click', (e) => {
-                    console.log('Click on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     if (!isPressed) {
@@ -714,21 +695,18 @@ class KubeTetris {
         
         // Setup each button with appropriate actions
         setupButton(moveLeftBtn, () => {
-            console.log('Move left action triggered');
             if (this.gameRunning) {
                 this.movePod(-1, 0);
             }
         }, 'light');
         
         setupButton(moveRightBtn, () => {
-            console.log('Move right action triggered');
             if (this.gameRunning) {
                 this.movePod(1, 0);
             }
         }, 'light');
         
         setupButton(startDropBtn, () => {
-            console.log('Start/drop action triggered, gameRunning:', this.gameRunning);
             if (!this.gameRunning) {
                 this.startGame();
                 hapticFeedback('heavy'); // Extra feedback for game start
@@ -738,14 +716,12 @@ class KubeTetris {
         }, 'medium');
         
         setupButton(instantDropBtn, () => {
-            console.log('Instant drop action triggered');
             if (this.gameRunning) {
                 this.dropPodInstantly();
             }
         }, 'medium');
         
         setupButton(resetBtn, () => {
-            console.log('Reset action triggered');
             this.resetGame();
             hapticFeedback('heavy'); // Strong feedback for reset
         }, 'heavy');
@@ -787,7 +763,6 @@ class KubeTetris {
             
             // Check cooldown to prevent conflicts with button presses
             if (touchEndTime - this.lastMoveActionTime < 100) {
-                console.log('Canvas swipe blocked - shared cooldown active');
                 touchStartX = null;
                 touchStartY = null;
                 touchStartTime = null;
@@ -832,14 +807,12 @@ class KubeTetris {
                     if (deltaX > 0) {
                         // Swipe right
                         if (this.gameRunning) {
-                            console.log('Canvas swipe right detected');
                             this.movePod(1, 0);
                             hapticFeedback('light');
                         }
                     } else {
                         // Swipe left
                         if (this.gameRunning) {
-                            console.log('Canvas swipe left detected');
                             this.movePod(-1, 0);
                             hapticFeedback('light');
                         }
@@ -851,7 +824,6 @@ class KubeTetris {
                     if (deltaY > 0) {
                         // Swipe down - instant drop
                         if (this.gameRunning) {
-                            console.log('Canvas swipe down detected');
                             this.dropPodInstantly();
                             hapticFeedback('medium');
                         }
@@ -919,6 +891,10 @@ class KubeTetris {
         // Set constant drop time (no speed increase)
         const dropTime = 1000; // Always 1 second
         
+        // Performance optimization: Throttle animations to 30fps (every other frame)
+        this.animationFrameThrottle++;
+        const shouldUpdateAnimations = this.animationFrameThrottle % 2 === 0;
+        
         // Handle instant drop animation
         if (this.isInstantDropping) {
             this.animationOffset += this.instantDropSpeed;
@@ -933,6 +909,7 @@ class KubeTetris {
                 this.placePod();
                 this.isInstantDropping = false;
                 this.animationOffset = 0;
+                this.isDirty = true; // Mark for redraw
             }
         } else {
             // Normal smooth animation interpolation
@@ -942,13 +919,21 @@ class KubeTetris {
                 this.movePod(0, 1);
                 this.dropCounter = 0;
                 this.animationOffset = 0;
+                this.isDirty = true; // Mark for redraw
             }
         }
         
-        // Update landing animations
-        this.updateLandingAnimations();
+        // Update landing animations only every other frame for performance
+        if (shouldUpdateAnimations) {
+            this.updateLandingAnimations();
+        }
         
-        this.draw();
+        // Only redraw if something changed (dirty region optimization)
+        if (this.isDirty || this.landingAnimations.length > 0 || this.landingEffects.length > 0 || this.bucketShakeAnimations.length > 0) {
+            this.draw();
+            this.isDirty = false;
+        }
+        
         requestAnimationFrame((time) => this.gameLoop(time));
     }
     
@@ -958,11 +943,8 @@ class KubeTetris {
         // Add cooldown for horizontal movements to prevent double execution
         const now = Date.now();
         if (dx !== 0 && now - this.lastMoveActionTime < 100) {
-            console.log(`Movement blocked - cooldown active (${now - this.lastMoveActionTime}ms ago)`);
             return false;
         }
-        
-        console.log(`movePod called with dx=${dx}, dy=${dy}, current pos: x=${this.currentPod.x}, y=${this.currentPod.y}`);
         
         const newX = this.currentPod.x + dx;
         const newY = this.currentPod.y + dy;
@@ -970,13 +952,13 @@ class KubeTetris {
         if (this.isValidPosition(this.currentPod.shape, newX, newY)) {
             this.currentPod.x = newX;
             this.currentPod.y = newY;
+            this.isDirty = true; // Mark for redraw
             
             // Update cooldown timer for horizontal movements
             if (dx !== 0) {
                 this.lastMoveActionTime = now;
             }
             
-            console.log(`Pod moved to new position: x=${newX}, y=${newY}`);
             return true;
         } else if (dy > 0) {
             // Check if pod is about to hit a bucket (node) and trigger animation
@@ -984,9 +966,9 @@ class KubeTetris {
             
             // Pod can't move down, place it
             this.placePod();
+            this.isDirty = true; // Mark for redraw
             return false;
         }
-        console.log(`Movement blocked - invalid position: x=${newX}, y=${newY}`);
         return false;
     }
     
@@ -1011,7 +993,6 @@ class KubeTetris {
             if (cell && cell.type === 'node') {
                 // Pod is hitting a bucket! Trigger animation
                 this.triggerLandingAnimation(x, y);
-                console.log(`Pod hitting bucket at (${x}, ${y})`);
             }
         }
         
@@ -1022,7 +1003,6 @@ class KubeTetris {
                 if (cell && cell.type === 'node') {
                     // Found the bucket underneath
                     this.triggerLandingAnimation(x, checkY);
-                    console.log(`Pod landing above bucket at (${x}, ${checkY})`);
                     break;
                 }
             }
@@ -1177,16 +1157,12 @@ class KubeTetris {
         if (this.nodes[node.nodeId]) {
             this.nodes[node.nodeId].resources = { ...node.resources };
         }
-        
-        console.log(`Applied ${resource.description} (+${JSON.stringify(resource.capacity)}) to Node ${node.nodeId}`);
     }
     
     triggerLandingAnimation(x, y) {
         // Create landing effect
         const cellX = x * this.CELL_SIZE;
         const cellY = y * this.CELL_SIZE;
-        
-        console.log('Triggering landing animation at:', x, y, 'cellX:', cellX, 'cellY:', cellY); // Debug
         
         // Check if this is a perfect match for bonus effects
         let isPerfectMatch = false;
@@ -1196,35 +1172,62 @@ class KubeTetris {
             isPerfectMatch = podPreferredNodes.includes(node.specialization);
         }
         
-        // Add bounce animation for the pod
+        // Add bounce animation for the pod (reduced intensity for performance)
         this.landingAnimations.push({
             x: cellX,
             y: cellY,
-            scale: isPerfectMatch ? 2.0 : 1.6, // Increased scale
-            scaleDecay: 0.92, // Slower decay
+            scale: isPerfectMatch ? 1.5 : 1.3, // Reduced scale
+            scaleDecay: 0.94, // Faster decay
             alpha: 1.0,
-            alphaDecay: 0.95, // Slower fade
-            duration: isPerfectMatch ? 50 : 40, // Longer duration
+            alphaDecay: 0.96, // Faster fade
+            duration: isPerfectMatch ? 30 : 25, // Shorter duration
             currentFrame: 0,
             isPerfectMatch: isPerfectMatch
         });
         
-        // Add particle effects (more for perfect matches)
-        const particleCount = isPerfectMatch ? 15 : 10; // More particles
-        for (let i = 0; i < particleCount; i++) {
-            this.landingEffects.push({
-                x: cellX + this.CELL_SIZE / 2,
-                y: cellY + this.CELL_SIZE / 2,
-                vx: (Math.random() - 0.5) * (isPerfectMatch ? 10 : 8), // Faster particles
-                vy: (Math.random() - 0.5) * (isPerfectMatch ? 10 : 8) - 3, // Higher velocity
-                life: isPerfectMatch ? 50 : 40, // Longer life
-                maxLife: isPerfectMatch ? 50 : 40,
-                color: isPerfectMatch ? 
+        // Optimized particle effects - fewer particles for better performance
+        const particleCount = isPerfectMatch ? 8 : 5; // Reduced from 15/10
+        for (let i = 0; i < particleCount && this.landingEffects.length < this.maxParticles; i++) {
+            const particle = this.getPooledParticle();
+            if (particle) {
+                particle.x = cellX + this.CELL_SIZE / 2;
+                particle.y = cellY + this.CELL_SIZE / 2;
+                particle.vx = (Math.random() - 0.5) * (isPerfectMatch ? 8 : 6); // Slower particles
+                particle.vy = (Math.random() - 0.5) * (isPerfectMatch ? 8 : 6) - 3;
+                particle.life = isPerfectMatch ? 30 : 25; // Shorter life
+                particle.maxLife = particle.life;
+                particle.color = isPerfectMatch ? 
                     `hsl(${60 + Math.random() * 60}, 100%, ${70 + Math.random() * 20}%)` : 
-                    `hsl(${180 + Math.random() * 60}, 100%, ${50 + Math.random() * 30}%)`,
-                size: isPerfectMatch ? 3 + Math.random() * 4 : 2 + Math.random() * 3
-            });
+                    `hsl(${180 + Math.random() * 60}, 100%, ${50 + Math.random() * 30}%)`;
+                particle.size = isPerfectMatch ? 2 + Math.random() * 2 : 1.5 + Math.random() * 1.5; // Smaller particles
+                particle.active = true;
+                this.landingEffects.push(particle);
+            }
         }
+    }
+    
+    // Object pool for particles to reduce memory allocation
+    getPooledParticle() {
+        // Find inactive particle in pool
+        for (let i = 0; i < this.particlePool.length; i++) {
+            if (!this.particlePool[i].active) {
+                return this.particlePool[i];
+            }
+        }
+        
+        // Create new particle if pool not full
+        if (this.particlePool.length < this.maxParticles) {
+            const particle = { active: false };
+            this.particlePool.push(particle);
+            return particle;
+        }
+        
+        return null; // Pool exhausted
+    }
+    
+    // Return particle to pool instead of destroying
+    returnParticleToPool(particle) {
+        particle.active = false;
     }
     
     triggerBucketShake(x, y) {
@@ -1240,49 +1243,68 @@ class KubeTetris {
     }
     
     updateLandingAnimations() {
-        // Update landing animations
-        this.landingAnimations = this.landingAnimations.filter(anim => {
+        // Update landing animations - more efficient than filter
+        for (let i = this.landingAnimations.length - 1; i >= 0; i--) {
+            const anim = this.landingAnimations[i];
             anim.currentFrame++;
             anim.scale *= anim.scaleDecay;
             anim.alpha *= anim.alphaDecay;
-            return anim.currentFrame < anim.duration && anim.alpha > 0.1;
-        });
+            
+            if (anim.currentFrame >= anim.duration || anim.alpha <= 0.1) {
+                this.landingAnimations.splice(i, 1);
+            }
+        }
         
-        // Update particle effects
-        this.landingEffects = this.landingEffects.filter(particle => {
+        // Update particle effects with object pooling
+        for (let i = this.landingEffects.length - 1; i >= 0; i--) {
+            const particle = this.landingEffects[i];
             particle.x += particle.vx;
             particle.y += particle.vy;
-            particle.vy += 0.3; // gravity
+            particle.vy += 0.2; // Reduced gravity for lighter feel
             particle.life--;
-            return particle.life > 0;
-        });
+            
+            if (particle.life <= 0) {
+                this.returnParticleToPool(particle);
+                this.landingEffects.splice(i, 1);
+            }
+        }
         
-        // Update bucket shake animations
-        this.bucketShakeAnimations = this.bucketShakeAnimations.filter(shake => {
+        // Update bucket shake animations - more efficient than filter
+        for (let i = this.bucketShakeAnimations.length - 1; i >= 0; i--) {
+            const shake = this.bucketShakeAnimations[i];
             shake.currentFrame++;
             shake.shakeIntensity *= shake.shakeDecay;
-            return shake.currentFrame < shake.duration && shake.shakeIntensity > 0.1;
-        });
+            
+            if (shake.currentFrame >= shake.duration || shake.shakeIntensity <= 0.1) {
+                this.bucketShakeAnimations.splice(i, 1);
+            }
+        }
     }
     
     drawLandingAnimations() {
-        // Draw landing bounce effects
+        // Draw landing bounce effects with cached gradients
         this.landingAnimations.forEach(anim => {
             this.ctx.save();
             this.ctx.globalAlpha = anim.alpha;
             this.ctx.translate(anim.x + this.CELL_SIZE / 2, anim.y + this.CELL_SIZE / 2);
             this.ctx.scale(anim.scale, anim.scale);
             
-            // Draw glowing circle effect (different colors for perfect matches)
-            const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.CELL_SIZE / 2);
-            if (anim.isPerfectMatch) {
-                gradient.addColorStop(0, 'rgba(255, 215, 0, 0.9)');
-                gradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.5)');
-                gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-            } else {
-                gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
-                gradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.4)');
-                gradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
+            // Use cached gradients for better performance
+            const gradientKey = anim.isPerfectMatch ? 'perfect' : 'normal';
+            let gradient = this.cachedGradients.get(gradientKey);
+            
+            if (!gradient) {
+                gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.CELL_SIZE / 2);
+                if (anim.isPerfectMatch) {
+                    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.9)');
+                    gradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.5)');
+                    gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.4)');
+                    gradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
+                }
+                this.cachedGradients.set(gradientKey, gradient);
             }
             
             this.ctx.fillStyle = gradient;
@@ -1293,20 +1315,25 @@ class KubeTetris {
             this.ctx.restore();
         });
         
-        // Draw particle effects
-        this.landingEffects.forEach(particle => {
+        // Optimized particle effects - batch similar operations
+        if (this.landingEffects.length > 0) {
             this.ctx.save();
-            this.ctx.globalAlpha = particle.life / particle.maxLife;
-            this.ctx.fillStyle = particle.color;
-            this.ctx.shadowBlur = 8;
-            this.ctx.shadowColor = particle.color;
             
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fill();
+            // Group particles by similar properties for batching
+            this.landingEffects.forEach(particle => {
+                this.ctx.globalAlpha = particle.life / particle.maxLife;
+                this.ctx.fillStyle = particle.color;
+                // Reduced shadow blur for performance
+                this.ctx.shadowBlur = 4;
+                this.ctx.shadowColor = particle.color;
+                
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            });
             
             this.ctx.restore();
-        });
+        }
     }
     
     canPlacePodOnNode(pod, node) {
@@ -1516,15 +1543,7 @@ class KubeTetris {
         }
     }
     
-    clearCompletedLines() {
-        for (let y = this.BOARD_HEIGHT - 1; y >= 0; y--) {
-            if (this.isLineFull(y)) {
-                this.clearLine(y);
-                this.score += 400 * this.level;
-                y++; // Check the same line again
-            }
-        }
-    }
+
     
     isLineFull(y) {
         for (let x = 0; x < this.BOARD_WIDTH; x++) {
@@ -1982,66 +2001,78 @@ class KubeTetris {
     }
     
     drawBucketManual(cellX, cellY, node) {
-        // Enhanced cyberpunk bucket drawing with holographic effects
+        // Simplified bucket drawing for better performance
         const bucketWidth = this.CELL_SIZE - 8;
         const bucketHeight = this.CELL_SIZE - 8;
         const rimHeight = 8;
         
         this.ctx.save();
         
-        // Holographic base glow
-        const glowIntensity = (Math.sin(Date.now() / 800) + 1) / 2;
-        this.ctx.shadowColor = '#00FFFF';
-        this.ctx.shadowBlur = 20 + glowIntensity * 10;
+        // Cache glow intensity calculation (calculate less frequently)
+        const now = Date.now();
+        let glowIntensity = this.cachedGlowIntensity;
+        if (!this.lastGlowUpdate || now - this.lastGlowUpdate > 50) { // Update every 50ms instead of every frame
+            glowIntensity = (Math.sin(now / 800) + 1) / 2;
+            this.cachedGlowIntensity = glowIntensity;
+            this.lastGlowUpdate = now;
+        }
         
-        // Bucket body (trapezoid shape) - darker cyberpunk base with gradient
-        const bodyGradient = this.ctx.createLinearGradient(cellX, cellY, cellX, cellY + bucketHeight);
-        bodyGradient.addColorStop(0, '#0a0a0a');
-        bodyGradient.addColorStop(0.3, '#1a1a2e');
-        bodyGradient.addColorStop(0.7, '#16213e');
-        bodyGradient.addColorStop(1, '#0a0a0a');
+        // Use cached gradients for better performance
+        let bodyGradient = this.cachedGradients.get('bucketBody');
+        if (!bodyGradient) {
+            bodyGradient = this.ctx.createLinearGradient(0, 0, 0, bucketHeight);
+            bodyGradient.addColorStop(0, '#0a0a0a');
+            bodyGradient.addColorStop(0.3, '#1a1a2e');
+            bodyGradient.addColorStop(0.7, '#16213e');
+            bodyGradient.addColorStop(1, '#0a0a0a');
+            this.cachedGradients.set('bucketBody', bodyGradient);
+        }
+        
+        // Reduced glow effect for performance
+        this.ctx.shadowColor = '#00FFFF';
+        this.ctx.shadowBlur = 15 + glowIntensity * 5; // Reduced intensity
         this.ctx.fillStyle = bodyGradient;
         
+        // Bucket body (trapezoid shape)
         this.ctx.beginPath();
-        this.ctx.moveTo(cellX + 8, cellY + 4); // Top left
-        this.ctx.lineTo(cellX + bucketWidth, cellY + 4); // Top right
-        this.ctx.lineTo(cellX + bucketWidth - 6, cellY + bucketHeight); // Bottom right
-        this.ctx.lineTo(cellX + 14, cellY + bucketHeight); // Bottom left
+        this.ctx.moveTo(cellX + 8, cellY + 4);
+        this.ctx.lineTo(cellX + bucketWidth, cellY + 4);
+        this.ctx.lineTo(cellX + bucketWidth - 6, cellY + bucketHeight);
+        this.ctx.lineTo(cellX + 14, cellY + bucketHeight);
         this.ctx.closePath();
         this.ctx.fill();
         
-        // Holographic rim with rainbow gradient
-        const rimGradient = this.ctx.createLinearGradient(cellX, cellY, cellX, cellY + rimHeight);
-        rimGradient.addColorStop(0, '#00FFFF');
-        rimGradient.addColorStop(0.3, '#0099FF');
-        rimGradient.addColorStop(0.6, '#FF00FF');
-        rimGradient.addColorStop(1, '#00FF99');
-        this.ctx.fillStyle = rimGradient;
+        // Simplified rim without complex gradient
+        this.ctx.fillStyle = '#00FFFF';
+        this.ctx.shadowBlur = 5;
         this.ctx.fillRect(cellX + 6, cellY + 4, bucketWidth + 4, rimHeight);
         
-        // Data flow lines on bucket sides
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
-        this.ctx.lineWidth = 1;
-        this.ctx.shadowBlur = 5;
-        
-        const flowOffset = (Date.now() / 100) % 20;
-        for (let i = 0; i < 3; i++) {
-            const y = cellY + 15 + i * 12 + flowOffset;
-            this.ctx.beginPath();
-            this.ctx.moveTo(cellX + 10, y);
-            this.ctx.lineTo(cellX + 18, y);
-            this.ctx.stroke();
+        // Simplified data flow lines (reduced frequency)
+        const shouldDrawFlow = this.animationFrameThrottle % 4 === 0; // Only draw every 4th frame
+        if (shouldDrawFlow) {
+            this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)'; // Reduced opacity
+            this.ctx.lineWidth = 1;
+            this.ctx.shadowBlur = 3;
             
-            this.ctx.beginPath();
-            this.ctx.moveTo(cellX + bucketWidth - 10, y);
-            this.ctx.lineTo(cellX + bucketWidth - 2, y);
-            this.ctx.stroke();
+            const flowOffset = (now / 200) % 20; // Slower animation
+            for (let i = 0; i < 2; i++) { // Fewer lines
+                const y = cellY + 15 + i * 15 + flowOffset;
+                this.ctx.beginPath();
+                this.ctx.moveTo(cellX + 10, y);
+                this.ctx.lineTo(cellX + 18, y);
+                this.ctx.stroke();
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(cellX + bucketWidth - 10, y);
+                this.ctx.lineTo(cellX + bucketWidth - 2, y);
+                this.ctx.stroke();
+            }
         }
         
-        // Enhanced neon outline with pulsing effect
-        this.ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + glowIntensity * 0.2})`;
-        this.ctx.lineWidth = 2 + glowIntensity;
-        this.ctx.shadowBlur = 15 + glowIntensity * 5;
+        // Simplified neon outline
+        this.ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + glowIntensity * 0.2})`;
+        this.ctx.lineWidth = 1.5; // Reduced line width
+        this.ctx.shadowBlur = 8; // Reduced blur
         
         this.ctx.beginPath();
         this.ctx.moveTo(cellX + 8, cellY + 4);
@@ -2051,14 +2082,7 @@ class KubeTetris {
         this.ctx.closePath();
         this.ctx.stroke();
         
-        // Enhanced rim outline with secondary glow
-        this.ctx.strokeStyle = `rgba(255, 0, 255, ${0.6 + glowIntensity * 0.3})`;
-        this.ctx.lineWidth = 1;
-        this.ctx.shadowColor = '#FF00FF';
-        this.ctx.shadowBlur = 8;
-        this.ctx.strokeRect(cellX + 6, cellY + 4, bucketWidth + 4, rimHeight);
-        
-        // Resource fill level with holographic liquid
+        // Simplified resource fill level
         const totalResources = node.resources.totalCpu + node.resources.totalRam;
         const usedResources = node.resources.usedCpu + node.resources.usedRam;
         const fillPercent = usedResources / totalResources;
@@ -2067,58 +2091,28 @@ class KubeTetris {
             const fillHeight = (bucketHeight - rimHeight - 4) * fillPercent;
             const fillY = cellY + bucketHeight - fillHeight;
             
-            // Animated liquid with wave effect
-            const waveOffset = Math.sin(Date.now() / 500 + cellX / 20) * 2;
-            
-            // Liquid gradient based on fill level
-            const liquidGradient = this.ctx.createLinearGradient(cellX, fillY, cellX, cellY + bucketHeight);
+            // Simplified liquid color without expensive gradients
+            let liquidColor;
             if (fillPercent > 0.8) {
-                liquidGradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
-                liquidGradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.6)');
-                liquidGradient.addColorStop(1, 'rgba(255, 0, 0, 0.9)');
+                liquidColor = 'rgba(255, 50, 50, 0.7)';
             } else if (fillPercent > 0.6) {
-                liquidGradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
-                liquidGradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.6)');
-                liquidGradient.addColorStop(1, 'rgba(255, 215, 0, 0.9)');
+                liquidColor = 'rgba(255, 200, 0, 0.7)';
             } else {
-                liquidGradient.addColorStop(0, 'rgba(0, 255, 100, 0.8)');
-                liquidGradient.addColorStop(0.5, 'rgba(0, 200, 255, 0.6)');
-                liquidGradient.addColorStop(1, 'rgba(0, 255, 100, 0.9)');
+                liquidColor = 'rgba(0, 255, 100, 0.7)';
             }
             
-            this.ctx.fillStyle = liquidGradient;
-            this.ctx.shadowColor = fillPercent > 0.8 ? '#FF0000' : fillPercent > 0.6 ? '#FFD700' : '#00FF64';
-            this.ctx.shadowBlur = 10;
+            this.ctx.fillStyle = liquidColor;
+            this.ctx.shadowBlur = 0; // Remove shadow for performance
             
-            // Draw trapezoid fill with wave effect
+            // Simple liquid fill without complex path
             this.ctx.beginPath();
-            this.ctx.moveTo(cellX + 16, fillY + waveOffset);
-            this.ctx.lineTo(cellX + bucketWidth - 8, fillY + waveOffset);
-            this.ctx.lineTo(cellX + bucketWidth - 14, cellY + bucketHeight - 2);
-            this.ctx.lineTo(cellX + 16, cellY + bucketHeight - 2);
+            this.ctx.moveTo(cellX + 16, fillY);
+            this.ctx.lineTo(cellX + bucketWidth - 8, fillY);
+            this.ctx.lineTo(cellX + bucketWidth - 10, cellY + bucketHeight - 4);
+            this.ctx.lineTo(cellX + 18, cellY + bucketHeight - 4);
             this.ctx.closePath();
             this.ctx.fill();
-            
-            // Liquid surface reflection
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            this.ctx.shadowBlur = 0;
-            this.ctx.fillRect(cellX + 16, fillY + waveOffset, bucketWidth - 24, 1);
         }
-        
-        // Holographic handles with glow
-        this.ctx.fillStyle = `rgba(0, 255, 255, ${0.7 + glowIntensity * 0.3})`;
-        this.ctx.shadowColor = '#00FFFF';
-        this.ctx.shadowBlur = 8;
-        
-        // Left handle
-        this.ctx.fillRect(cellX + 2, cellY + 6, 6, 8);
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(cellX + 2, cellY + 6, 6, 8);
-        
-        // Right handle
-        this.ctx.fillRect(cellX + bucketWidth + 2, cellY + 6, 6, 8);
-        this.ctx.strokeRect(cellX + bucketWidth + 2, cellY + 6, 6, 8);
         
         this.ctx.restore();
     }
@@ -2602,24 +2596,17 @@ window.clearGameCache = function() {
     if (window.game && typeof window.game.forceClearCache === 'function') {
         window.game.forceClearCache();
     } else {
-        console.log('Clearing caches manually...');
-        
-        // Clear localStorage except high scores
+        // Fallback when game is not loaded yet
         const highScores = localStorage.getItem('kubetetris_highscores');
         localStorage.clear();
         if (highScores) {
             localStorage.setItem('kubetetris_highscores', highScores);
         }
-        
-        // Clear sessionStorage
         sessionStorage.clear();
         
-        // Clear browser caches
         if ('caches' in window) {
             caches.keys().then(cacheNames => {
-                cacheNames.forEach(cacheName => {
-                    caches.delete(cacheName);
-                });
+                cacheNames.forEach(cacheName => caches.delete(cacheName));
             });
         }
         
