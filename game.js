@@ -79,13 +79,15 @@ class KubeTetris {
         });
     }
     
-    // Cache management and version checking
-    checkAndClearCache() {
+    // Unified cache management
+    manageCaches(forceReload = false) {
         const storedVersion = localStorage.getItem('kubetetris_version');
+        const isVersionUpdate = storedVersion !== this.gameVersion;
         
-        // If version has changed or doesn't exist, clear relevant caches
-        if (storedVersion !== this.gameVersion) {
-            console.log(`KubeTetris version updated: ${storedVersion} → ${this.gameVersion}`);
+        if (isVersionUpdate || forceReload) {
+            if (isVersionUpdate) {
+                console.log(`KubeTetris version updated: ${storedVersion} → ${this.gameVersion}`);
+            }
             
             // Clear localStorage except for high scores
             const highScores = localStorage.getItem('kubetetris_highscores');
@@ -97,54 +99,40 @@ class KubeTetris {
             // Clear sessionStorage
             sessionStorage.clear();
             
-            // Try to clear browser cache programmatically
+            // Clear browser caches
             if ('caches' in window) {
                 caches.keys().then(cacheNames => {
                     cacheNames.forEach(cacheName => {
-                        if (cacheName.includes('kubetetris') || cacheName.includes('game')) {
+                        if (!forceReload && (cacheName.includes('kubetetris') || cacheName.includes('game'))) {
+                            caches.delete(cacheName);
+                        } else if (forceReload) {
                             caches.delete(cacheName);
                         }
                     });
                 });
             }
             
-            // Store new version
-            localStorage.setItem('kubetetris_version', this.gameVersion);
+            // Store new version for version updates
+            if (isVersionUpdate) {
+                localStorage.setItem('kubetetris_version', this.gameVersion);
+                console.log('Game caches cleared for new version');
+            }
             
-            console.log('Game caches cleared for new version');
+            // Force reload if requested
+            if (forceReload) {
+                setTimeout(() => window.location.reload(true), 500);
+            }
         }
     }
     
-    // Manual cache clearing method (can be called from console)
+    // Version checking - calls unified cache management
+    checkAndClearCache() {
+        this.manageCaches(false);
+    }
+    
+    // Manual cache clearing - calls unified cache management with reload
     forceClearCache() {
-        console.log('Manually clearing all caches...');
-        
-        // Clear localStorage except for high scores
-        const highScores = localStorage.getItem('kubetetris_highscores');
-        localStorage.clear();
-        if (highScores) {
-            localStorage.setItem('kubetetris_highscores', highScores);
-        }
-        
-        // Clear sessionStorage
-        sessionStorage.clear();
-        
-        // Clear service worker caches
-        if ('caches' in window) {
-            caches.keys().then(cacheNames => {
-                cacheNames.forEach(cacheName => {
-                    caches.delete(cacheName);
-                    console.log(`Cleared cache: ${cacheName}`);
-                });
-            });
-        }
-        
-        // Force page reload to ensure fresh assets
-        setTimeout(() => {
-            window.location.reload(true);
-        }, 500);
-        
-        console.log('Cache cleared! Page will reload...');
+        this.manageCaches(true);
     }
 
     resizeCanvas() {
@@ -582,15 +570,6 @@ class KubeTetris {
         const instantDropBtn = document.getElementById('instant-drop-btn');
         const resetBtn = document.getElementById('reset-btn');
         
-        // Debug: Check if elements exist
-        console.log('Mobile buttons found:', {
-            moveLeftBtn: !!moveLeftBtn,
-            moveRightBtn: !!moveRightBtn,
-            startDropBtn: !!startDropBtn,
-            instantDropBtn: !!instantDropBtn,
-            resetBtn: !!resetBtn
-        });
-        
         // Mobile haptic feedback helper
         const hapticFeedback = (intensity = 'medium') => {
             // Only attempt vibration on mobile devices, after user interaction, and if vibration is supported
@@ -623,11 +602,8 @@ class KubeTetris {
         // Enhanced button interaction with feedback
         const setupButton = (button, action, feedbackIntensity = 'medium') => {
             if (!button) {
-                console.warn('Button not found for setup');
                 return;
             }
-            
-            console.log('Setting up button:', button.id);
             
             let isPressed = false;
             let lastActionTime = 0;
@@ -637,7 +613,6 @@ class KubeTetris {
                 const now = Date.now();
                 // Use shared cooldown for movement actions
                 if (button.id.includes('move') && now - this.lastMoveActionTime < 100) {
-                    console.log('Button action blocked - shared cooldown active');
                     return;
                 }
                 action();
@@ -647,7 +622,6 @@ class KubeTetris {
             if ('ontouchstart' in window) {
                 // Mobile/touch device
                 button.addEventListener('touchstart', (e) => {
-                    console.log('Touch start on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     isPressed = true;
@@ -656,7 +630,6 @@ class KubeTetris {
                 }, { passive: false });
                 
                 button.addEventListener('touchend', (e) => {
-                    console.log('Touch end on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     if (isPressed) {
@@ -702,7 +675,6 @@ class KubeTetris {
                 
                 // Click as backup for desktop
                 button.addEventListener('click', (e) => {
-                    console.log('Click on', button.id);
                     e.preventDefault();
                     e.stopPropagation();
                     if (!isPressed) {
@@ -714,21 +686,18 @@ class KubeTetris {
         
         // Setup each button with appropriate actions
         setupButton(moveLeftBtn, () => {
-            console.log('Move left action triggered');
             if (this.gameRunning) {
                 this.movePod(-1, 0);
             }
         }, 'light');
         
         setupButton(moveRightBtn, () => {
-            console.log('Move right action triggered');
             if (this.gameRunning) {
                 this.movePod(1, 0);
             }
         }, 'light');
         
         setupButton(startDropBtn, () => {
-            console.log('Start/drop action triggered, gameRunning:', this.gameRunning);
             if (!this.gameRunning) {
                 this.startGame();
                 hapticFeedback('heavy'); // Extra feedback for game start
@@ -738,14 +707,12 @@ class KubeTetris {
         }, 'medium');
         
         setupButton(instantDropBtn, () => {
-            console.log('Instant drop action triggered');
             if (this.gameRunning) {
                 this.dropPodInstantly();
             }
         }, 'medium');
         
         setupButton(resetBtn, () => {
-            console.log('Reset action triggered');
             this.resetGame();
             hapticFeedback('heavy'); // Strong feedback for reset
         }, 'heavy');
@@ -787,7 +754,6 @@ class KubeTetris {
             
             // Check cooldown to prevent conflicts with button presses
             if (touchEndTime - this.lastMoveActionTime < 100) {
-                console.log('Canvas swipe blocked - shared cooldown active');
                 touchStartX = null;
                 touchStartY = null;
                 touchStartTime = null;
@@ -832,14 +798,12 @@ class KubeTetris {
                     if (deltaX > 0) {
                         // Swipe right
                         if (this.gameRunning) {
-                            console.log('Canvas swipe right detected');
                             this.movePod(1, 0);
                             hapticFeedback('light');
                         }
                     } else {
                         // Swipe left
                         if (this.gameRunning) {
-                            console.log('Canvas swipe left detected');
                             this.movePod(-1, 0);
                             hapticFeedback('light');
                         }
@@ -851,7 +815,6 @@ class KubeTetris {
                     if (deltaY > 0) {
                         // Swipe down - instant drop
                         if (this.gameRunning) {
-                            console.log('Canvas swipe down detected');
                             this.dropPodInstantly();
                             hapticFeedback('medium');
                         }
@@ -958,11 +921,8 @@ class KubeTetris {
         // Add cooldown for horizontal movements to prevent double execution
         const now = Date.now();
         if (dx !== 0 && now - this.lastMoveActionTime < 100) {
-            console.log(`Movement blocked - cooldown active (${now - this.lastMoveActionTime}ms ago)`);
             return false;
         }
-        
-        console.log(`movePod called with dx=${dx}, dy=${dy}, current pos: x=${this.currentPod.x}, y=${this.currentPod.y}`);
         
         const newX = this.currentPod.x + dx;
         const newY = this.currentPod.y + dy;
@@ -976,7 +936,6 @@ class KubeTetris {
                 this.lastMoveActionTime = now;
             }
             
-            console.log(`Pod moved to new position: x=${newX}, y=${newY}`);
             return true;
         } else if (dy > 0) {
             // Check if pod is about to hit a bucket (node) and trigger animation
@@ -986,7 +945,6 @@ class KubeTetris {
             this.placePod();
             return false;
         }
-        console.log(`Movement blocked - invalid position: x=${newX}, y=${newY}`);
         return false;
     }
     
@@ -1011,7 +969,6 @@ class KubeTetris {
             if (cell && cell.type === 'node') {
                 // Pod is hitting a bucket! Trigger animation
                 this.triggerLandingAnimation(x, y);
-                console.log(`Pod hitting bucket at (${x}, ${y})`);
             }
         }
         
@@ -1022,7 +979,6 @@ class KubeTetris {
                 if (cell && cell.type === 'node') {
                     // Found the bucket underneath
                     this.triggerLandingAnimation(x, checkY);
-                    console.log(`Pod landing above bucket at (${x}, ${checkY})`);
                     break;
                 }
             }
@@ -1177,16 +1133,12 @@ class KubeTetris {
         if (this.nodes[node.nodeId]) {
             this.nodes[node.nodeId].resources = { ...node.resources };
         }
-        
-        console.log(`Applied ${resource.description} (+${JSON.stringify(resource.capacity)}) to Node ${node.nodeId}`);
     }
     
     triggerLandingAnimation(x, y) {
         // Create landing effect
         const cellX = x * this.CELL_SIZE;
         const cellY = y * this.CELL_SIZE;
-        
-        console.log('Triggering landing animation at:', x, y, 'cellX:', cellX, 'cellY:', cellY); // Debug
         
         // Check if this is a perfect match for bonus effects
         let isPerfectMatch = false;
@@ -1516,15 +1468,7 @@ class KubeTetris {
         }
     }
     
-    clearCompletedLines() {
-        for (let y = this.BOARD_HEIGHT - 1; y >= 0; y--) {
-            if (this.isLineFull(y)) {
-                this.clearLine(y);
-                this.score += 400 * this.level;
-                y++; // Check the same line again
-            }
-        }
-    }
+
     
     isLineFull(y) {
         for (let x = 0; x < this.BOARD_WIDTH; x++) {
@@ -2602,24 +2546,17 @@ window.clearGameCache = function() {
     if (window.game && typeof window.game.forceClearCache === 'function') {
         window.game.forceClearCache();
     } else {
-        console.log('Clearing caches manually...');
-        
-        // Clear localStorage except high scores
+        // Fallback when game is not loaded yet
         const highScores = localStorage.getItem('kubetetris_highscores');
         localStorage.clear();
         if (highScores) {
             localStorage.setItem('kubetetris_highscores', highScores);
         }
-        
-        // Clear sessionStorage
         sessionStorage.clear();
         
-        // Clear browser caches
         if ('caches' in window) {
             caches.keys().then(cacheNames => {
-                cacheNames.forEach(cacheName => {
-                    caches.delete(cacheName);
-                });
+                cacheNames.forEach(cacheName => caches.delete(cacheName));
             });
         }
         
